@@ -12,6 +12,11 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	"durable_objects": {
+		"bindings": [
+			{ "name": "HARMONIES", "class_name": "Harmonies" }
+		]
 	}
 	/**
 	 * Smart Placement
