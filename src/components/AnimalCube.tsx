@@ -1,5 +1,5 @@
 import { ViewTransition } from "react";
-import AnimalCubeIcon from ".../assets/animalCube.webp";
+import AnimalCubeIcon from "../assets/animalCube.webp";
 
 interface AnimalCubeProps extends React.ComponentProps<"img"> {
   id: string;

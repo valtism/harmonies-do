@@ -1,10 +1,10 @@
 import { ViewTransition } from "react";
-import TokenBlue from ".../assets/tokens/tokenBlue.webp";
-import TokenBrown from ".../assets/tokens/tokenBrown.webp";
-import TokenGray from ".../assets/tokens/tokenGray.webp";
-import TokenGreen from ".../assets/tokens/tokenGreen.webp";
-import TokenRed from ".../assets/tokens/tokenRed.webp";
-import TokenYellow from ".../assets/tokens/tokenYellow.webp";
+import TokenBlue from "../assets/tokens/tokenBlue.webp";
+import TokenBrown from "../assets/tokens/tokenBrown.webp";
+import TokenGray from "../assets/tokens/tokenGray.webp";
+import TokenGreen from "../assets/tokens/tokenGreen.webp";
+import TokenRed from "../assets/tokens/tokenRed.webp";
+import TokenYellow from "../assets/tokens/tokenYellow.webp";
 import type { TokenType } from "../sharedTypes";
 
 const tokenImage = {

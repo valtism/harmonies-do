@@ -1,7 +1,7 @@
 import clsx from "clsx";
 import { defineHex, Grid, Orientation } from "honeycomb-grid";
 import { startTransition, useEffect, useRef, useState } from "react";
-import BoardSideA from ".../assets/boardSideA.webp";
+import BoardSideA from "../assets/boardSideA.webp";
 import { AnimalCard } from "../components/AnimalCard";
 import { PlacingToken } from "../components/PlacingToken";
 import { Token } from "../components/Token";

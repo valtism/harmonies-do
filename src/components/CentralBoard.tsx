@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import CentralBoardImg from ".../assets/centralBoard.webp";
+import CentralBoardImg from "../assets/centralBoard.webp";
 import { Token } from "../components/Token";
 import type { DerivedPublicGameState } from "../sharedTypes";
 
