@@ -12,14 +12,17 @@
 		"cf-typegen": "wrangler types"
 	},
 	"dependencies": {
-		"react": "^19.1.1",
-		"react-dom": "^19.1.1"
+		"@tanstack/react-router": "^1.132.47",
+		"@tanstack/react-router-devtools": "^1.132.51",
+		"react": "^19.2.0",
+		"react-dom": "^19.2.0"
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.13.12",
 		"@eslint/js": "^9.33.0",
-		"@types/react": "^19.1.10",
-		"@types/react-dom": "^19.1.7",
+		"@tanstack/router-plugin": "^1.132.51",
+		"@types/react": "^19.2.2",
+		"@types/react-dom": "^19.2.1",
 		"@vitejs/plugin-react": "^5.0.0",
 		"eslint": "^9.33.0",
 		"eslint-plugin-react-hooks": "^5.2.0",
