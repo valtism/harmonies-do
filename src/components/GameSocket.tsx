@@ -1,13 +1,12 @@
 // import usePartySocket from "partysocket/react";
-import { startTransition, useState } from "react";
-import { toastQueue } from "../components/toastQueue";
+import { useState } from "react";
 import type {
   ActionType,
-  Broadcast,
   DerivedPublicGameState,
   PlayersById,
   User,
 } from "../sharedTypes";
+import { useWebSocket } from "../util/useWebSocket";
 import { Game } from "./Game";
 
 interface GameSocketProps {
@@ -18,57 +17,64 @@ export function GameSocket({ roomId, user }: GameSocketProps) {
   const [gameState, setGameState] = useState<DerivedPublicGameState | null>(
     null,
   );
-
-  const [playersById, setPlayersById] = useState<PlayersById | null>(null);
-
-  const socket = usePartySocket({
-    // host defaults to the current URL if not set
-    // host: process.env.PARTYKIT_HOST,
-    // we could use any room name here
-    host: "localhost:1999",
-    room: roomId,
-    query: () => ({
-      player: JSON.stringify(user),
-    }),
-    onMessage(evt) {
-      console.log(evt);
-      const broadcast = JSON.parse(evt.data) as Broadcast;
-      switch (broadcast.type) {
-        case "players":
-          setPlayersById(broadcast.players);
-          break;
-        case "gameState":
-          startTransition(() => {
-            setGameState(broadcast.gameState);
-          });
-          break;
-        case "error":
-          if (broadcast.playerId !== user.id) return;
-          toastQueue.add(
-            {
-              type: "error",
-              message: broadcast.message,
-            },
-            { timeout: 5000 },
-          );
-          break;
-        default:
-          broadcast satisfies never;
-      }
+  const { connect, sendMessage, connectionStatus } = useWebSocket({
+    durableObjectId: roomId,
+    onMessage: (message) => {
+      console.log(message);
+      // const broadcast = JSON.parse(message.data) as Broadcast;
+      // switch (broadcast.type) {
+      //   case "players":
+      //     setPlayersById(broadcast.players);
+      //     break;
+      //   case "gameState":
+      //     startTransition(() => {
+      //       setGameState(broadcast.gameState);
+      //     });
+      //     break;
+      //   case "error":
+      //     if (broadcast.playerId !== user.id) return;
+      //     toastQueue.add(
+      //       {
+      //         type: "error",
+      //         message: broadcast.message,
+      //       },
+      //       { timeout: 5000 },
+      //     );
+      //     break;
+      //   default:
+      //     broadcast satisfies never;
     },
   });
 
+  const [playersById, setPlayersById] = useState<PlayersById | null>(null);
+
   function sendAction(action: ActionType) {
-    return socket.send(JSON.stringify(action));
+    // return socket.send(JSON.stringify(action));
   }
 
-  if (playersById && !gameState) {
+  if (!gameState) {
     return (
       <div>
+        <button
+          className="px-2 py-1 rounded bg-stone-200 hover:bg-stone-300"
+          onClick={connect}
+          disabled={connectionStatus === "connecting"}
+        >
+          {connectionStatus === "connected"
+            ? "Connected"
+            : connectionStatus === "connecting"
+              ? "Connecting..."
+              : "Connect to Server"}
+        </button>
+        {connectionStatus === "connected" && (
+          <button onClick={() => sendMessage("Hello from client!")}>
+            Send Test Message
+          </button>
+        )}
         <div>Players:</div>
-        {Object.values(playersById).map((player) => (
+        {/*{Object.values(playersById).map((player) => (
           <div key={player.id}>{player.name}</div>
-        ))}
+        ))}*/}
         <button
           onClick={() => {
             sendAction({

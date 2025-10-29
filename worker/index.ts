@@ -7,7 +7,15 @@ export interface Env {
 // Worker
 export default {
   async fetch(request, env) {
-    if (request.url.endsWith("/websocket")) {
+    const url = new URL(request.url);
+    if (url.pathname.endsWith("/websocket")) {
+      const durableObjectId = url.searchParams.get("durableObjectId");
+      if (!durableObjectId) {
+        return new Response("Missing durableObjectId parameter", {
+          status: 400,
+        });
+      }
+
       // Expect to receive a WebSocket Upgrade request.
       // If there is one, accept the request and return a WebSocket Response.
       const upgradeHeader = request.headers.get("Upgrade");
@@ -25,14 +33,14 @@ export default {
 
       // Since we are hard coding the Durable Object ID by providing the constant name 'foo',
       // all requests to this Worker will be sent to the same Durable Object instance.
-      const id = env.HARMONIES.idFromName("foo");
+      const id = env.HARMONIES.idFromName(durableObjectId);
       const stub = env.HARMONIES.get(id);
 
       return stub.fetch(request);
     }
 
     // A stub is a client used to invoke methods on the Durable Object
-    const stub = env.HARMONIES.getByName("foo");
+    const stub = env.HARMONIES.getByName(durableObjectId);
 
     // Methods on the Durable Object are invoked via the stub
     const rpcResponse = await stub.sayHello();
@@ -113,5 +121,11 @@ export class Harmonies extends DurableObject {
 
   async sayHello(): Promise<string> {
     return "Hello, World!";
+  }
+}
+
+function assert(condition: unknown, message?: string): asserts condition {
+  if (!condition) {
+    throw new Error(message || "Assertion failed");
   }
 }

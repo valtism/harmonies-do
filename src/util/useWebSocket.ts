@@ -1,6 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 
-export function useWebSocket() {
+interface useWebSocketProps {
+  durableObjectId: string;
+  onMessage?: (message: string) => void;
+}
+export function useWebSocket({
+  durableObjectId,
+  onMessage,
+}: useWebSocketProps) {
   const wsRef = useRef<WebSocket | null>(null);
   const [connectionStatus, setConnectionStatus] = useState<
     "connecting" | "connected" | "disconnected"
@@ -9,19 +16,17 @@ export function useWebSocket() {
   const connect = () => {
     // Determine the WebSocket URL based on the current protocol
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//${window.location.host}/websocket`;
+    const wsUrl = `${protocol}//${window.location.host}/websocket?durableObjectId=${durableObjectId}`;
 
     setConnectionStatus("connecting");
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
-      console.log("WebSocket connected");
       setConnectionStatus("connected");
     };
 
     ws.onmessage = (event) => {
-      console.log("Received message:", event.data);
-      // Handle incoming messages here
+      onMessage?.(event.data);
     };
 
     ws.onerror = (error) => {
