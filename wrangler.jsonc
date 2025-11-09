@@ -14,12 +14,12 @@
     "enabled": true,
   },
   "durable_objects": {
-    "bindings": [{ "name": "HARMONIES", "class_name": "Harmonies" }],
+    "bindings": [{ "name": "HARMONIES", "class_name": "HarmoniesGame" }],
   },
   "migrations": [
     {
       "tag": "v1",
-      "new_classes": ["Harmonies"],
+      "new_classes": ["HarmoniesGame"],
     },
   ],
   /**

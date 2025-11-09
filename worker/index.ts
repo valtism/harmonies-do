@@ -1,21 +1,21 @@
 import { DurableObject } from "cloudflare:workers";
 
 export interface Env {
-  HARMONIES: DurableObjectNamespace<Harmonies>;
+  HARMONIES: DurableObjectNamespace<HarmoniesGame>;
 }
 
 // Worker
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
-    if (url.pathname.endsWith("/websocket")) {
-      const durableObjectId = url.searchParams.get("durableObjectId");
-      if (!durableObjectId) {
-        return new Response("Missing durableObjectId parameter", {
-          status: 400,
-        });
-      }
+    const durableObjectId = url.searchParams.get("durableObjectId");
+    if (!durableObjectId) {
+      return new Response("Missing durableObjectId parameter", {
+        status: 400,
+      });
+    }
 
+    if (url.pathname.endsWith("/websocket")) {
       // Expect to receive a WebSocket Upgrade request.
       // If there is one, accept the request and return a WebSocket Response.
       const upgradeHeader = request.headers.get("Upgrade");
@@ -52,7 +52,7 @@ export default {
 // Durable Object
 export class Harmonies extends DurableObject {
   // Keeps track of all WebSocket connections
-  sessions: Map<WebSocket, { [key: string]: string }>;
+  sessions: Map<WebSocket, Record<string, string>>;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -107,11 +107,11 @@ export class Harmonies extends DurableObject {
 
     // Broadcast the message to all the connections,
     // including the one that sent the message.
-    this.sessions.forEach((_, session) => {
-      session.send(
-        `[Durable Object] message: ${message}, from: ${connection.id}`,
-      );
-    });
+    // this.sessions.forEach((_, session) => {
+    //   session.send(
+    //     `[Durable Object] message: ${message}, from: ${connection.id}`,
+    //   );
+    // });
   }
 
   async handleConnectionClose(ws: WebSocket) {
@@ -124,8 +124,101 @@ export class Harmonies extends DurableObject {
   }
 }
 
-function assert(condition: unknown, message?: string): asserts condition {
-  if (!condition) {
-    throw new Error(message || "Assertion failed");
+// Game-specific Durable Object - extends Harmonies with game logic
+export class HarmoniesGame extends Harmonies {
+  // Add your game state here
+  gameState: {
+    players: Map<string, any>;
+    board: any;
+    currentTurn: string | null;
+    // ... other game state
+  };
+
+  constructor(ctx: DurableObjectState, env: Env) {
+    super(ctx, env);
+    // Initialize game state
+    this.gameState = {
+      players: new Map(),
+      board: null,
+      currentTurn: null,
+    };
+  }
+
+  // Override the message handler to add game logic
+  async handleWebSocketMessage(ws: WebSocket, message: string | ArrayBuffer) {
+    const connection = this.sessions.get(ws)!;
+
+    // Parse the message as a game action
+    try {
+      const data = JSON.parse(message as string);
+
+      // Handle different game actions
+      switch (data.type) {
+        case "JOIN_GAME":
+          this.handlePlayerJoin(ws, connection.id, data.payload);
+          break;
+        case "MAKE_MOVE":
+          this.handlePlayerMove(ws, connection.id, data.payload);
+          break;
+        case "CHAT":
+          // For chat messages, use the parent class behavior
+          super.handleWebSocketMessage(ws, message);
+          break;
+        default:
+          ws.send(JSON.stringify({ error: "Unknown action type" }));
+      }
+    } catch (error) {
+      // If parsing fails, fall back to parent behavior
+      super.handleWebSocketMessage(ws, message);
+    }
+  }
+
+  // Your game logic methods
+  handlePlayerJoin(ws: WebSocket, playerId: string, payload: any) {
+    this.gameState.players.set(playerId, payload);
+
+    // Broadcast to all players
+    this.broadcastGameState();
+  }
+
+  handlePlayerMove(ws: WebSocket, playerId: string, payload: any) {
+    // Validate it's the player's turn
+    if (this.gameState.currentTurn !== playerId) {
+      ws.send(JSON.stringify({ error: "Not your turn" }));
+      return;
+    }
+
+    // Apply the move to your game state
+    // ... your game logic here ...
+
+    // Broadcast updated state
+    this.broadcastGameState();
+  }
+
+  broadcastGameState() {
+    const state = JSON.stringify({
+      type: "GAME_STATE_UPDATE",
+      payload: {
+        players: Array.from(this.gameState.players.entries()),
+        board: this.gameState.board,
+        currentTurn: this.gameState.currentTurn,
+      },
+    });
+
+    this.sessions.forEach((_, session) => {
+      session.send(state);
+    });
+  }
+
+  // Override connection close to handle player leaving
+  async handleConnectionClose(ws: WebSocket) {
+    const connection = this.sessions.get(ws);
+    if (connection) {
+      this.gameState.players.delete(connection.id);
+      this.broadcastGameState();
+    }
+
+    // Call parent method to clean up the session
+    super.handleConnectionClose(ws);
   }
 }
