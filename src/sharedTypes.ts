@@ -1,3 +1,4 @@
+import type { Grid, Hex } from "honeycomb-grid";
 import { z } from "zod/v4";
 import type { animalCardImages } from "./constants/animalCardImages";
 import type { spiritCards } from "./constants/spiritCards";
@@ -90,18 +91,18 @@ export interface Place {
   cube: "animal" | "spirit" | null;
 }
 
+export type ImmutablePrivateGameState = DeepImmutable<PrivateGameState>;
+
 export interface PrivateGameState {
   tokens: TokenType[];
   animalCards: AnimalCardType[];
   animalCubes: AnimalCubeType[];
   boardType: "A" | "B";
   playerIdList: string[];
-  currentPlayerId: string | null;
+  currentPlayerId: string;
 }
 
-export type ImmutablePrivateGameState = DeepImmutable<PrivateGameState>;
-
-export interface PlayerState {
+export interface PlayerGameState {
   id: string;
   name: string;
   takenTokens: [TokenType | null, TokenType | null, TokenType | null];
@@ -115,10 +116,28 @@ export interface PlayerState {
   board: Record<string, Place>;
 }
 
+export type PublicState = PublicIdleState | PublicActiveState;
+
+interface PublicIdleState {
+  type: "idle";
+  players: Record<string, PlayerMeta>;
+}
+
+interface PublicActiveState {
+  type: "active";
+  players: Record<string, PlayerMeta>;
+  gameState: DerivedPublicGameState;
+}
+
+interface PlayerMeta {
+  id: string;
+  name: string;
+}
+
 export interface DerivedPublicGameState {
   grid: [number, number][];
   currentPlayerId: string;
-  players: Record<string, PlayerState>;
+  players: Record<string, PlayerGameState>;
   animalCardSpread: [
     AnimalCardType | null,
     AnimalCardType | null,
@@ -134,6 +153,14 @@ export interface DerivedPublicGameState {
     [TokenType | null, TokenType | null, TokenType | null],
   ];
 }
+
+const joinGameActionSchema = z.object({
+  type: z.literal("joinGame"),
+  payload: z.object({
+    id: z.string(),
+    name: z.string(),
+  }),
+});
 
 const startGameActionSchema = z.object({
   type: z.literal("startGame"),
@@ -179,6 +206,7 @@ const undoSchema = z.object({
 });
 
 export const actionSchema = z.union([
+  joinGameActionSchema,
   startGameActionSchema,
   takeTokensSchema,
   placeTokenSchema,
@@ -202,18 +230,35 @@ export interface History {
 
 export type PlayersById = Record<string, User>;
 
+export type GameState = {
+  players: Map<string, User>;
+} & (IdleState | ActiveState);
+
+type IdleState = {
+  type: "idle";
+  privateGameState: null;
+  history: null;
+  grid: null;
+};
+
+type ActiveState = {
+  type: "active";
+  privateGameState: ImmutablePrivateGameState;
+  history: History[];
+  grid: Grid<Hex>;
+};
+
 export type Broadcast =
-  | {
-      type: "players";
-      players: PlayersById;
-    }
+  // | {
+  //     type: "players";
+  //     players: PlayersById;
+  //   }
   | {
       type: "gameState";
-      gameState: DerivedPublicGameState;
+      payload: PublicState;
     }
   | {
       type: "error";
-      playerId: string;
       message: string;
     };
 

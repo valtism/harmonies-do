@@ -1,11 +1,11 @@
 import { fromCoordinates, Grid, Hex } from "honeycomb-grid";
-import type { Coords, DerivedAnimalCardType, PlayerState } from "../sharedTypes";
+import type { Coords, DerivedAnimalCardType, PlayerGameState } from "../sharedTypes";
 
 export function canPlaceCube(
   animalCard: DerivedAnimalCardType | undefined | null,
   grid: Grid<Hex>,
   hex: Coords,
-  playerBoard: PlayerState["board"],
+  playerBoard: PlayerGameState["board"],
 ) {
   if (!animalCard) return false;
 

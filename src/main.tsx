@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 
 // Import the generated route tree
+import { Toasts } from "./components/Toast";
 import { routeTree } from "./routeTree.gen";
 
 // Create a new router instance
@@ -18,6 +19,7 @@ declare module "@tanstack/react-router" {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
+    <Toasts />
     <RouterProvider router={router} />
   </StrictMode>,
 );

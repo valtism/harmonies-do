@@ -19,7 +19,7 @@
 		"@types/react-dom": "^19.2.1",
 		"honeycomb-grid": "^4.1.5",
 		"react": "^19.3.0-canary-4b3e662e-20251008",
-		"react-aria-components": "^1.13.0",
+		"react-aria-components": "^1.14.0",
 		"react-dom": "^19.3.0-canary-4b3e662e-20251008",
 		"tailwindcss": "^4.1.14",
 		"use-local-storage-state": "^19.5.0"

@@ -1,62 +1,60 @@
-// import usePartySocket from "partysocket/react";
-import { useState } from "react";
-import type {
-  ActionType,
-  DerivedPublicGameState,
-  PlayersById,
-  User,
-} from "../sharedTypes";
+import { startTransition, useState } from "react";
+import type { ActionType, Broadcast, PublicState, User } from "../sharedTypes";
 import { useWebSocket } from "../util/useWebSocket";
 import { Game } from "./Game";
+import { toastQueue } from "./toastQueue";
 
 interface GameSocketProps {
   roomId: string;
   user: User;
 }
 export function GameSocket({ roomId, user }: GameSocketProps) {
-  const [gameState, setGameState] = useState<DerivedPublicGameState | null>(
-    null,
-  );
+  const [gameState, setGameState] = useState<PublicState>({
+    type: "idle",
+    players: {},
+  });
   const { connect, sendMessage, connectionStatus } = useWebSocket({
     durableObjectId: roomId,
     onMessage: (message) => {
-      console.log(message);
-      // const broadcast = JSON.parse(message.data) as Broadcast;
-      // switch (broadcast.type) {
-      //   case "players":
-      //     setPlayersById(broadcast.players);
-      //     break;
-      //   case "gameState":
-      //     startTransition(() => {
-      //       setGameState(broadcast.gameState);
-      //     });
-      //     break;
-      //   case "error":
-      //     if (broadcast.playerId !== user.id) return;
-      //     toastQueue.add(
-      //       {
-      //         type: "error",
-      //         message: broadcast.message,
-      //       },
-      //       { timeout: 5000 },
-      //     );
-      //     break;
-      //   default:
-      //     broadcast satisfies never;
+      const broadcast = JSON.parse(message) as Broadcast;
+      console.log(broadcast);
+      switch (broadcast.type) {
+        // case "players":
+        //   setPlayersById(broadcast.players);
+        //   break;
+        case "gameState":
+          startTransition(() => {
+            setGameState(broadcast.payload);
+          });
+          break;
+        case "error":
+          // if (broadcast.playerId !== user.id) return;
+          console.log("here")
+          toastQueue.add(
+            {
+              type: "error",
+              message: broadcast.message,
+            },
+            { timeout: 5000 },
+          );
+          break;
+        default:
+          broadcast satisfies never;
+      }
     },
   });
 
-  const [playersById, setPlayersById] = useState<PlayersById | null>(null);
+  // const [playersById, setPlayersById] = useState<PlayersById | null>(null);
 
   function sendAction(action: ActionType) {
-    // return socket.send(JSON.stringify(action));
+    sendMessage(JSON.stringify(action));
   }
 
-  if (!gameState) {
+  if (gameState.type === "idle") {
     return (
       <div>
         <button
-          className="px-2 py-1 rounded bg-stone-200 hover:bg-stone-300"
+          className="px-2 py-1 rounded bg-stone-800 hover:bg-stone-700"
           onClick={connect}
           disabled={connectionStatus === "connecting"}
         >
@@ -67,14 +65,24 @@ export function GameSocket({ roomId, user }: GameSocketProps) {
               : "Connect to Server"}
         </button>
         {connectionStatus === "connected" && (
-          <button onClick={() => sendMessage("Hello from client!")}>
+          <button
+            onClick={() =>
+              sendAction({
+                type: "joinGame",
+                payload: {
+                  id: user.id,
+                  name: user.name,
+                },
+              })
+            }
+          >
             Send Test Message
           </button>
         )}
         <div>Players:</div>
-        {/*{Object.values(playersById).map((player) => (
+        {Object.values(gameState.players).map((player) => (
           <div key={player.id}>{player.name}</div>
-        ))}*/}
+        ))}
         <button
           onClick={() => {
             sendAction({
@@ -89,9 +97,11 @@ export function GameSocket({ roomId, user }: GameSocketProps) {
     );
   }
 
-  if (!gameState) return null;
-
   return (
-    <Game gameState={gameState} sendAction={sendAction} playerId={user.id} />
+    <Game
+      gameState={gameState.gameState}
+      sendAction={sendAction}
+      playerId={user.id}
+    />
   );
 }
