@@ -17,7 +17,14 @@ export function NameSelect({ onNameChange, ...props }: NameSelectProps) {
         <input
           type="text"
           name="name"
-          defaultValue={Math.floor(Math.random() * 16777215).toString(16)}
+          defaultValue={
+            ["Happy", "Brave", "Swift", "Clever", "Calm"][
+              Math.floor(Math.random() * 5)
+            ] +
+            ["Fox", "Bear", "Wolf", "Hawk", "Owl"][
+              Math.floor(Math.random() * 5)
+            ]
+          }
         />
       </label>
       <button type="submit" {...props}>

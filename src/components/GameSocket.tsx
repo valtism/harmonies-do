@@ -10,20 +10,20 @@ export function GameSocket({ gameState, user, sendAction }: GameSocketProps) {
   if (gameState.type === "idle") {
     return (
       <div>
-        
-          <button
-            onClick={() =>
-              sendAction({
-                type: "joinGame",
-                payload: {
-                  id: user.id,
-                  name: user.name,
-                },
-              })
-            }
-          >
-            Send Test Message
-          </button>
+        <button
+          className="rounded bg-stone-200 px-2 py-1 text-stone-900 hover:bg-stone-300 active:bg-stone-400"
+          onClick={() =>
+            sendAction({
+              type: "joinGame",
+              payload: {
+                id: user.id,
+                name: user.name,
+              },
+            })
+          }
+        >
+          Join Game
+        </button>
         <div>Players:</div>
         {Object.values(gameState.players).map((player) => (
           <div key={player.id}>{player.name}</div>
