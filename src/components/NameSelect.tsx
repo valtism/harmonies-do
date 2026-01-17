@@ -1,7 +1,7 @@
-interface NameSelectProps {
+interface NameSelectProps extends React.ComponentProps<"button"> {
   onNameChange: (name: string) => void;
 }
-export function NameSelect({ onNameChange }: NameSelectProps) {
+export function NameSelect({ onNameChange, ...props }: NameSelectProps) {
   return (
     <form
       onSubmit={(e) => {
@@ -20,7 +20,9 @@ export function NameSelect({ onNameChange }: NameSelectProps) {
           defaultValue={Math.floor(Math.random() * 16777215).toString(16)}
         />
       </label>
-      <button type="submit">Submit</button>
+      <button type="submit" {...props}>
+        Submit
+      </button>
     </form>
   );
 }

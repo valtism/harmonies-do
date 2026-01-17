@@ -1,70 +1,16 @@
-import { startTransition, useState } from "react";
-import type { ActionType, Broadcast, PublicState, User } from "../sharedTypes";
-import { useWebSocket } from "../util/useWebSocket";
+import type { ActionType, PublicState, User } from "../sharedTypes";
 import { Game } from "./Game";
-import { toastQueue } from "./toastQueue";
 
 interface GameSocketProps {
-  roomId: string;
+  gameState: PublicState;
   user: User;
+  sendAction: (action: ActionType) => void;
 }
-export function GameSocket({ roomId, user }: GameSocketProps) {
-  const [gameState, setGameState] = useState<PublicState>({
-    type: "idle",
-    players: {},
-  });
-  const { connect, sendMessage, connectionStatus } = useWebSocket({
-    durableObjectId: roomId,
-    onMessage: (message) => {
-      const broadcast = JSON.parse(message) as Broadcast;
-      console.log(broadcast);
-      switch (broadcast.type) {
-        // case "players":
-        //   setPlayersById(broadcast.players);
-        //   break;
-        case "gameState":
-          startTransition(() => {
-            setGameState(broadcast.payload);
-          });
-          break;
-        case "error":
-          // if (broadcast.playerId !== user.id) return;
-          console.log("here")
-          toastQueue.add(
-            {
-              type: "error",
-              message: broadcast.message,
-            },
-            { timeout: 5000 },
-          );
-          break;
-        default:
-          broadcast satisfies never;
-      }
-    },
-  });
-
-  // const [playersById, setPlayersById] = useState<PlayersById | null>(null);
-
-  function sendAction(action: ActionType) {
-    sendMessage(JSON.stringify(action));
-  }
-
+export function GameSocket({ gameState, user, sendAction }: GameSocketProps) {
   if (gameState.type === "idle") {
     return (
       <div>
-        <button
-          className="px-2 py-1 rounded bg-stone-800 hover:bg-stone-700"
-          onClick={connect}
-          disabled={connectionStatus === "connecting"}
-        >
-          {connectionStatus === "connected"
-            ? "Connected"
-            : connectionStatus === "connecting"
-              ? "Connecting..."
-              : "Connect to Server"}
-        </button>
-        {connectionStatus === "connected" && (
+        
           <button
             onClick={() =>
               sendAction({
@@ -78,7 +24,6 @@ export function GameSocket({ roomId, user }: GameSocketProps) {
           >
             Send Test Message
           </button>
-        )}
         <div>Players:</div>
         {Object.values(gameState.players).map((player) => (
           <div key={player.id}>{player.name}</div>
