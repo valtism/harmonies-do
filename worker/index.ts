@@ -1,10 +1,16 @@
 import { DurableObject } from "cloudflare:workers";
+import { defineHex, Grid, Orientation } from "honeycomb-grid";
+import { allAnimalCards } from "../src/constants/animalCards";
 import { grids } from "../src/constants/grids";
+import { allTokens } from "../src/constants/tokens";
 import {
   actionSchema,
+  type AnimalCardType,
   type Broadcast,
   type DerivedPublicGameState,
   type GameState,
+  type PrivateGameState,
+  type TokenType,
   type User,
 } from "../src/sharedTypes";
 
@@ -152,6 +158,9 @@ export class HarmoniesGame extends Harmonies {
         case "joinGame":
           this.handlePlayerJoin(data.payload);
           break;
+        case "startGame":
+          this.startGame();
+          break;
         default: {
           const error: Broadcast = {
             type: "error",
@@ -172,6 +181,83 @@ export class HarmoniesGame extends Harmonies {
   // Your game logic methods
   handlePlayerJoin(player: User) {
     this.gameState.players.set(player.id, player);
+  }
+
+  startGame() {
+    // TODO make boardType dynamic
+    const boardType = "A";
+
+    const Hex = defineHex({
+      dimensions: 1,
+      orientation: Orientation.FLAT,
+      origin: "topLeft",
+    });
+    const grid = new Grid(Hex, grids[boardType]);
+
+    const playerIdList = shuffle(Array.from(this.gameState.players.keys()));
+
+    const tokens = shuffle([...allTokens]).map((color, index) => {
+      if (index < 15) {
+        const zone = Math.floor(index / 3);
+        const place = index % 3;
+        const token: TokenType = {
+          id: `token-${crypto.randomUUID()}`,
+          color,
+          type: "centralBoard",
+          position: { zone, place },
+        };
+        return token;
+      } else {
+        const token: TokenType = {
+          id: `token-${crypto.randomUUID()}`,
+          color,
+          type: "pouch",
+        };
+        return token;
+      }
+    });
+
+    const animalCards: PrivateGameState["animalCards"] = shuffle(
+      Object.values(allAnimalCards),
+    ).map((animalCard, index) => {
+      if (index < 5) {
+        const card: AnimalCardType = {
+          ...animalCard,
+          type: "spread",
+          position: { index: index },
+        };
+        return card;
+      } else {
+        const card: AnimalCardType = {
+          ...animalCard,
+          type: "deck",
+        };
+        return card;
+      }
+    });
+
+    const animalCubes: PrivateGameState["animalCubes"] = Array.from({
+      length: 66,
+    }).map(() => ({
+      id: `animal-cube-${crypto.randomUUID()}`,
+      type: "pouch",
+    }));
+
+    const currentPlayerId = playerIdList[0];
+    if (!currentPlayerId) throw new Error("No players found");
+
+    this.gameState.grid = grid;
+
+    this.gameState.privateGameState = {
+      boardType: boardType,
+      playerIdList: playerIdList,
+      currentPlayerId: currentPlayerId,
+      tokens: tokens,
+      animalCards: animalCards,
+      animalCubes: animalCubes,
+    };
+
+    this.gameState.type = "active";
   }
 
   broadcastGameState() {
@@ -327,4 +413,11 @@ export class HarmoniesGame extends Harmonies {
     // Call parent method to clean up the session
     super.handleConnectionClose(ws);
   }
+}
+
+function shuffle<T>(array: T[]) {
+  return array
+    .map((value) => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value);
 }
