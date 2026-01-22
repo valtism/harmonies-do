@@ -5,18 +5,44 @@ import { grids } from "../src/constants/grids";
 import { allTokens } from "../src/constants/tokens";
 import {
   actionSchema,
+  type ActionKeys,
+  type ActionType,
   type AnimalCardType,
   type Broadcast,
+  type CanPerformAction,
   type DerivedPublicGameState,
   type GameState,
+  type ImmutablePrivateGameState,
   type PrivateGameState,
   type TokenType,
-  type User,
 } from "../src/sharedTypes";
 
 export interface Env {
   HARMONIES: DurableObjectNamespace<HarmoniesGame>;
 }
+
+export type ActionContext<K extends ActionKeys> = {
+  action: Extract<ActionType, { type: K }>;
+  playerId: string;
+  gameState: GameState;
+};
+
+type ActionHandlers = {
+  [K in ActionKeys]: {
+    validate: (context: ActionContext<K>) => CanPerformAction;
+    apply: (context: ActionContext<K>) => GameState;
+  };
+};
+
+type StoredConnection = {
+  id: string;
+  playerId?: string;
+};
+
+type HistoryEntry = {
+  action: ActionType & { canUndo: boolean };
+  gameState: ImmutablePrivateGameState;
+};
 
 // Worker
 export default {
@@ -62,7 +88,7 @@ export default {
 // Durable Object
 export class Harmonies extends DurableObject {
   // Keeps track of all WebSocket connections
-  sessions: Map<WebSocket, { id: string }>;
+  sessions: Map<WebSocket, StoredConnection>;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -133,6 +159,7 @@ export class Harmonies extends DurableObject {
 // Game-specific Durable Object - extends Harmonies with game logic
 export class HarmoniesGame extends Harmonies {
   gameState: GameState;
+  actionHandlers: ActionHandlers;
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -144,31 +171,57 @@ export class HarmoniesGame extends Harmonies {
       history: null,
       grid: null,
     };
+
+    this.actionHandlers = {
+      joinGame: {
+        validate: (context) => this.validateJoinGame(context),
+        apply: (context) => this.applyJoinGame(context),
+      },
+      startGame: {
+        validate: (context) => this.validateStartGame(context),
+        apply: (context) => this.applyStartGame(context),
+      },
+      takeTokens: {
+        validate: (context) => this.validateTakeTokens(context),
+        apply: (context) => this.applyTakeTokens(context),
+      },
+      placeToken: {
+        validate: (context) => this.validatePlaceToken(context),
+        apply: (context) => this.applyPlaceToken(context),
+      },
+      takeAnimalCard: {
+        validate: (context) => this.validateTakeAnimalCard(context),
+        apply: (context) => this.applyTakeAnimalCard(context),
+      },
+      test: {
+        validate: (context) => this.validateTest(context),
+        apply: (context) => this.applyTest(context),
+      },
+      endTurn: {
+        validate: (context) => this.validateEndTurn(context),
+        apply: (context) => this.applyEndTurn(context),
+      },
+      undo: {
+        validate: (context) => this.validateUndo(context),
+        apply: (context) => this.applyUndo(context),
+      },
+    };
   }
 
   // Override the message handler to add game logic
   async handleWebSocketMessage(ws: WebSocket, message: string) {
-    // Parse the message as a game action
     try {
-      const data = actionSchema.parse(JSON.parse(message));
-      console.log(data);
+      const action = actionSchema.parse(JSON.parse(message));
+      const connection = this.sessions.get(ws);
+      invariant(connection, "Connection not found");
 
-      // Handle different game actions
-      switch (data.type) {
-        case "joinGame":
-          this.handlePlayerJoin(data.payload);
-          break;
-        case "startGame":
-          this.startGame();
-          break;
-        default: {
-          const error: Broadcast = {
-            type: "error",
-            message: "Unknown action type",
-          };
-          ws.send(JSON.stringify(error));
-        }
+      if (action.type === "joinGame") {
+        connection.playerId = action.payload.id;
       }
+      const playerId = connection.playerId;
+      invariant(playerId, "Missing player id for action");
+
+      this.applyAction(ws, action, playerId);
     } catch (error) {
       console.error(error);
       // If parsing fails, fall back to parent behavior
@@ -178,12 +231,91 @@ export class HarmoniesGame extends Harmonies {
     }
   }
 
-  // Your game logic methods
-  handlePlayerJoin(player: User) {
-    this.gameState.players.set(player.id, player);
+  applyAction<K extends ActionKeys>(
+    ws: WebSocket,
+    action: Extract<ActionType, { type: K }>,
+    playerId: string,
+  ) {
+    const handler = this.actionHandlers[action.type];
+
+    if (!handler) {
+      this.sendError(ws, "Unknown action type");
+      return;
+    }
+
+    const context = {
+      action,
+      playerId,
+      gameState: this.gameState,
+    } as ActionContext<K>;
+
+    this.beforeAction(context);
+
+    const validation = handler.validate(context);
+    if (!validation.ok) {
+      // this.onReject(context, validation.message);
+      this.sendError(ws, validation.message);
+      return;
+    }
+
+    const nextState = handler.apply(context);
+    this.gameState = nextState;
+    this.afterAction(context, nextState);
   }
 
-  startGame() {
+  beforeAction<K extends ActionKeys>(_context: ActionContext<K>) {}
+
+  afterAction<K extends ActionKeys>(
+    _context: ActionContext<K>,
+    _nextState: GameState,
+  ) {}
+
+  onReject<K extends ActionKeys>(
+    _context: ActionContext<K>,
+    _message: string,
+  ) {}
+
+  sendError(ws: WebSocket, message: string) {
+    const error: Broadcast = {
+      type: "error",
+      message,
+    };
+    ws.send(JSON.stringify(error));
+  }
+
+  validateJoinGame(_context: ActionContext<"joinGame">) {
+    return { ok: true } satisfies CanPerformAction;
+  }
+
+  applyJoinGame(context: ActionContext<"joinGame">) {
+    const players = new Map(context.gameState.players);
+    players.set(context.action.payload.id, context.action.payload);
+
+    return {
+      ...context.gameState,
+      players,
+    };
+  }
+
+  validateStartGame(context: ActionContext<"startGame">) {
+    if (context.gameState.type !== "idle") {
+      return {
+        ok: false,
+        message: "Game already started",
+      } satisfies CanPerformAction;
+    }
+
+    if (context.gameState.players.size === 0) {
+      return {
+        ok: false,
+        message: "No players found",
+      } satisfies CanPerformAction;
+    }
+
+    return { ok: true } satisfies CanPerformAction;
+  }
+
+  applyStartGame(context: ActionContext<"startGame">) {
     // TODO make boardType dynamic
     const boardType = "A";
 
@@ -194,7 +326,7 @@ export class HarmoniesGame extends Harmonies {
     });
     const grid = new Grid(Hex, grids[boardType]);
 
-    const playerIdList = shuffle(Array.from(this.gameState.players.keys()));
+    const playerIdList = shuffle(Array.from(context.gameState.players.keys()));
 
     const tokens = shuffle([...allTokens]).map((color, index) => {
       if (index < 15) {
@@ -244,11 +376,11 @@ export class HarmoniesGame extends Harmonies {
     }));
 
     const currentPlayerId = playerIdList[0];
-    if (!currentPlayerId) throw new Error("No players found");
+    if (!currentPlayerId) {
+      throw new Error("No players found");
+    }
 
-    this.gameState.grid = grid;
-
-    this.gameState.privateGameState = {
+    const privateGameState: ImmutablePrivateGameState = {
       boardType: boardType,
       playerIdList: playerIdList,
       currentPlayerId: currentPlayerId,
@@ -257,7 +389,257 @@ export class HarmoniesGame extends Harmonies {
       animalCubes: animalCubes,
     };
 
-    this.gameState.type = "active";
+    return {
+      players: context.gameState.players,
+      type: "active",
+      grid,
+      privateGameState,
+      history: [],
+    } satisfies GameState;
+  }
+
+  validateTakeTokens(context: ActionContext<"takeTokens">) {
+    if (context.gameState.type !== "active") {
+      return {
+        ok: false,
+        message: "Game is not active",
+      } satisfies CanPerformAction;
+    }
+
+    const { history, privateGameState } = context.gameState;
+
+    if (privateGameState.currentPlayerId !== context.playerId) {
+      return { ok: false, message: "Not your turn" } satisfies CanPerformAction;
+    }
+
+    for (let i = history.length; i > 0; i--) {
+      const entry = history[i - 1];
+      if (entry.gameState.currentPlayerId !== context.playerId) {
+        break;
+      }
+      if (entry.action.type === "takeTokens") {
+        return {
+          ok: false,
+          message: "Already taken tokens",
+        } satisfies CanPerformAction;
+      }
+    }
+
+    const hasTokens = privateGameState.tokens.some(
+      (token) =>
+        token.type === "centralBoard" &&
+        token.position.zone === context.action.payload,
+    );
+
+    if (!hasTokens) {
+      return {
+        ok: false,
+        message: "No tokens in that zone",
+      } satisfies CanPerformAction;
+    }
+
+    return { ok: true } satisfies CanPerformAction;
+  }
+
+  applyTakeTokens(context: ActionContext<"takeTokens">) {
+    if (context.gameState.type !== "active") {
+      return context.gameState;
+    }
+
+    const zone = context.action.payload;
+    let place = 0;
+
+    const tokens = context.gameState.privateGameState.tokens.map((token) => {
+      if (token.type === "centralBoard" && token.position.zone === zone) {
+        const newToken: TokenType = {
+          id: token.id,
+          color: token.color,
+          type: "taken",
+          position: { player: context.playerId, place: place },
+        };
+        place += 1;
+        return newToken;
+      }
+      return token;
+    });
+
+    const nextPrivateGameState: ImmutablePrivateGameState = {
+      ...context.gameState.privateGameState,
+      tokens,
+    };
+
+    return this.pushHistory(
+      context.gameState,
+      context.action,
+      nextPrivateGameState,
+    );
+  }
+
+  validatePlaceToken(_context: ActionContext<"placeToken">) {
+    // TODO: Implement validation
+    // - Check game is active
+    // - Check it's the player's turn
+    // - Check player has taken tokens
+    // - Check tokenId is in player's taken tokens
+    // - Check coords is a valid hex on the player's board
+    // - Check placement rules (stacking, adjacency, etc.)
+    return { ok: true } satisfies CanPerformAction;
+  }
+
+  applyPlaceToken(context: ActionContext<"placeToken">) {
+    // TODO: Implement token placement
+    // - Move token from taken to playerBoard
+    // - Update token position with coords and stack position
+    return context.gameState;
+  }
+
+  validateTakeAnimalCard(_context: ActionContext<"takeAnimalCard">) {
+    // TODO: Implement validation
+    // - Check game is active
+    // - Check it's the player's turn
+    // - Check player has placed all tokens (or turn conditions met)
+    // - Check index is valid (0-4)
+    // - Check there's a card at that index
+    // - Check player has fewer than 4 animal cards
+    return { ok: true } satisfies CanPerformAction;
+  }
+
+  applyTakeAnimalCard(context: ActionContext<"takeAnimalCard">) {
+    // TODO: Implement taking animal card
+    // - Move card from spread to player's hand
+    // - Draw new card from deck to fill spread
+    return context.gameState;
+  }
+
+  validateTest(_context: ActionContext<"test">) {
+    // TODO: Implement validation for testing animal card placement
+    // - Check game is active
+    // - Check it's the player's turn
+    // - Check animalCardId is valid
+    // - Check hex is on player's board
+    return { ok: true } satisfies CanPerformAction;
+  }
+
+  applyTest(context: ActionContext<"test">) {
+    // TODO: Implement test action
+    // - Check if animal card pattern matches at given hex
+    // - Return result (potentially mark card as completed)
+    return context.gameState;
+  }
+
+  validateEndTurn(context: ActionContext<"endTurn">) {
+    // TODO: Implement validation
+    // - Check game is active
+    // - Check it's the player's turn
+    // - Check player has completed required actions (placed tokens, etc.)
+    if (context.gameState.type !== "active") {
+      return {
+        ok: false,
+        message: "Game is not active",
+      } satisfies CanPerformAction;
+    }
+    if (
+      context.gameState.privateGameState.currentPlayerId !== context.playerId
+    ) {
+      return { ok: false, message: "Not your turn" } satisfies CanPerformAction;
+    }
+    return { ok: true } satisfies CanPerformAction;
+  }
+
+  applyEndTurn(context: ActionContext<"endTurn">) {
+    // TODO: Implement end turn
+    // - Refill central board from pouch
+    // - Advance to next player
+    // - Check for end game conditions
+    if (context.gameState.type !== "active") {
+      return context.gameState;
+    }
+
+    const { privateGameState } = context.gameState;
+    const currentIndex = privateGameState.playerIdList.indexOf(
+      context.playerId,
+    );
+    const nextIndex = (currentIndex + 1) % privateGameState.playerIdList.length;
+    const nextPlayerId = privateGameState.playerIdList[nextIndex];
+
+    const nextPrivateGameState: ImmutablePrivateGameState = {
+      ...privateGameState,
+      currentPlayerId: nextPlayerId,
+    };
+
+    return this.pushHistory(
+      context.gameState,
+      context.action,
+      nextPrivateGameState,
+    );
+  }
+
+  validateUndo(context: ActionContext<"undo">) {
+    // TODO: Implement validation
+    // - Check game is active
+    // - Check there's history to undo
+    // - Check the last action was by this player
+    // - Check the last action is marked as canUndo
+    if (context.gameState.type !== "active") {
+      return {
+        ok: false,
+        message: "Game is not active",
+      } satisfies CanPerformAction;
+    }
+    if (context.gameState.history.length === 0) {
+      return {
+        ok: false,
+        message: "No actions to undo",
+      } satisfies CanPerformAction;
+    }
+    const lastEntry =
+      context.gameState.history[context.gameState.history.length - 1];
+    if (!lastEntry.action.canUndo) {
+      return {
+        ok: false,
+        message: "Cannot undo this action",
+      } satisfies CanPerformAction;
+    }
+    return { ok: true } satisfies CanPerformAction;
+  }
+
+  applyUndo(context: ActionContext<"undo">) {
+    // TODO: Implement undo
+    // - Pop the last history entry
+    // - Restore the previous game state
+    if (context.gameState.type !== "active") {
+      return context.gameState;
+    }
+
+    const history = [...context.gameState.history];
+    const lastEntry = history.pop();
+
+    if (!lastEntry) {
+      return context.gameState;
+    }
+
+    return {
+      ...context.gameState,
+      privateGameState: lastEntry.gameState,
+      history,
+    } satisfies GameState;
+  }
+
+  pushHistory(
+    gameState: Extract<GameState, { type: "active" }>,
+    action: ActionType,
+    privateGameState: ImmutablePrivateGameState,
+  ): GameState {
+    const historyEntry: HistoryEntry = {
+      action: { ...action, canUndo: true },
+      gameState: gameState.privateGameState,
+    };
+
+    return {
+      ...gameState,
+      privateGameState,
+      history: [...gameState.history, historyEntry],
+    } satisfies GameState;
   }
 
   broadcastGameState() {
@@ -406,7 +788,8 @@ export class HarmoniesGame extends Harmonies {
   async handleConnectionClose(ws: WebSocket) {
     const connection = this.sessions.get(ws);
     if (connection) {
-      this.gameState.players.delete(connection.id);
+      const playerId = connection.playerId ?? connection.id;
+      this.gameState.players.delete(playerId);
       this.broadcastGameState();
     }
 
@@ -420,4 +803,10 @@ function shuffle<T>(array: T[]) {
     .map((value) => ({ value, sort: Math.random() }))
     .sort((a, b) => a.sort - b.sort)
     .map(({ value }) => value);
+}
+
+function invariant(condition: unknown, message: string): asserts condition {
+  if (!condition) {
+    throw new Error(message);
+  }
 }

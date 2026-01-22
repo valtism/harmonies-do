@@ -154,67 +154,55 @@ export interface DerivedPublicGameState {
   ];
 }
 
-const joinGameActionSchema = z.object({
-  type: z.literal("joinGame"),
-  payload: z.object({
-    id: z.string(),
-    name: z.string(),
-  }),
-});
-
-const startGameActionSchema = z.object({
-  type: z.literal("startGame"),
-});
-
-const takeTokensSchema = z.object({
-  type: z.literal("takeTokens"),
-  payload: z.number(),
-});
-
-const placeTokenSchema = z.object({
-  type: z.literal("placeToken"),
-  payload: z.object({
-    tokenId: z.string(),
-    coords: z.string(),
-  }),
-});
-
-const takeAnimalCard = z.object({
-  type: z.literal("takeAnimalCard"),
-  payload: z.object({
-    index: z.number(),
-  }),
-});
-
-const testSchema = z.object({
-  type: z.literal("test"),
-  payload: z.object({
-    animalCardId: z.string(),
-    hex: z.object({
-      q: z.number(),
-      r: z.number(),
+const actionSchemas = {
+  joinGame: z.object({
+    type: z.literal("joinGame"),
+    payload: z.object({
+      id: z.string(),
+      name: z.string(),
     }),
   }),
-});
+  startGame: z.object({
+    type: z.literal("startGame"),
+  }),
+  takeTokens: z.object({
+    type: z.literal("takeTokens"),
+    payload: z.number(),
+  }),
+  placeToken: z.object({
+    type: z.literal("placeToken"),
+    payload: z.object({
+      tokenId: z.string(),
+      coords: z.string(),
+    }),
+  }),
+  takeAnimalCard: z.object({
+    type: z.literal("takeAnimalCard"),
+    payload: z.object({
+      index: z.number(),
+    }),
+  }),
+  test: z.object({
+    type: z.literal("test"),
+    payload: z.object({
+      animalCardId: z.string(),
+      hex: z.object({
+        q: z.number(),
+        r: z.number(),
+      }),
+    }),
+  }),
+  endTurn: z.object({
+    type: z.literal("endTurn"),
+  }),
+  undo: z.object({
+    type: z.literal("undo"),
+  }),
+};
 
-const endTurnSchema = z.object({
-  type: z.literal("endTurn"),
-});
+export type ActionKeys = keyof typeof actionSchemas;
 
-const undoSchema = z.object({
-  type: z.literal("undo"),
-});
-
-export const actionSchema = z.union([
-  joinGameActionSchema,
-  startGameActionSchema,
-  takeTokensSchema,
-  placeTokenSchema,
-  takeAnimalCard,
-  testSchema,
-  endTurnSchema,
-  undoSchema,
-]);
+export const actionSchema = z.union(Object.values(actionSchemas));
 
 export type ActionType = z.infer<typeof actionSchema>;
 
