@@ -283,11 +283,11 @@ export class HarmoniesGame extends Harmonies {
     ws.send(JSON.stringify(error));
   }
 
-  validateJoinGame(_context: ActionContext<"joinGame">) {
-    return { ok: true } satisfies CanPerformAction;
+  validateJoinGame(_context: ActionContext<"joinGame">): CanPerformAction {
+    return { ok: true };
   }
 
-  applyJoinGame(context: ActionContext<"joinGame">) {
+  applyJoinGame(context: ActionContext<"joinGame">): GameState {
     const players = new Map(context.gameState.players);
     players.set(context.action.payload.id, context.action.payload);
 
@@ -297,25 +297,25 @@ export class HarmoniesGame extends Harmonies {
     };
   }
 
-  validateStartGame(context: ActionContext<"startGame">) {
+  validateStartGame(context: ActionContext<"startGame">): CanPerformAction {
     if (context.gameState.type !== "idle") {
       return {
         ok: false,
         message: "Game already started",
-      } satisfies CanPerformAction;
+      };
     }
 
     if (context.gameState.players.size === 0) {
       return {
         ok: false,
         message: "No players found",
-      } satisfies CanPerformAction;
+      };
     }
 
-    return { ok: true } satisfies CanPerformAction;
+    return { ok: true };
   }
 
-  applyStartGame(context: ActionContext<"startGame">) {
+  applyStartGame(context: ActionContext<"startGame">): GameState {
     // TODO make boardType dynamic
     const boardType = "A";
 
@@ -395,21 +395,21 @@ export class HarmoniesGame extends Harmonies {
       grid,
       privateGameState,
       history: [],
-    } satisfies GameState;
+    };
   }
 
-  validateTakeTokens(context: ActionContext<"takeTokens">) {
+  validateTakeTokens(context: ActionContext<"takeTokens">): CanPerformAction {
     if (context.gameState.type !== "active") {
       return {
         ok: false,
         message: "Game is not active",
-      } satisfies CanPerformAction;
+      };
     }
 
     const { history, privateGameState } = context.gameState;
 
     if (privateGameState.currentPlayerId !== context.playerId) {
-      return { ok: false, message: "Not your turn" } satisfies CanPerformAction;
+      return { ok: false, message: "Not your turn" };
     }
 
     for (let i = history.length; i > 0; i--) {
@@ -421,7 +421,7 @@ export class HarmoniesGame extends Harmonies {
         return {
           ok: false,
           message: "Already taken tokens",
-        } satisfies CanPerformAction;
+        };
       }
     }
 
@@ -435,13 +435,13 @@ export class HarmoniesGame extends Harmonies {
       return {
         ok: false,
         message: "No tokens in that zone",
-      } satisfies CanPerformAction;
+      };
     }
 
-    return { ok: true } satisfies CanPerformAction;
+    return { ok: true };
   }
 
-  applyTakeTokens(context: ActionContext<"takeTokens">) {
+  applyTakeTokens(context: ActionContext<"takeTokens">): GameState {
     if (context.gameState.type !== "active") {
       return context.gameState;
     }
@@ -475,7 +475,7 @@ export class HarmoniesGame extends Harmonies {
     );
   }
 
-  validatePlaceToken(_context: ActionContext<"placeToken">) {
+  validatePlaceToken(_context: ActionContext<"placeToken">): CanPerformAction {
     // TODO: Implement validation
     // - Check game is active
     // - Check it's the player's turn
@@ -483,7 +483,7 @@ export class HarmoniesGame extends Harmonies {
     // - Check tokenId is in player's taken tokens
     // - Check coords is a valid hex on the player's board
     // - Check placement rules (stacking, adjacency, etc.)
-    return { ok: true } satisfies CanPerformAction;
+    return { ok: true };
   }
 
   applyPlaceToken(context: ActionContext<"placeToken">) {
@@ -493,7 +493,9 @@ export class HarmoniesGame extends Harmonies {
     return context.gameState;
   }
 
-  validateTakeAnimalCard(_context: ActionContext<"takeAnimalCard">) {
+  validateTakeAnimalCard(
+    _context: ActionContext<"takeAnimalCard">,
+  ): CanPerformAction {
     // TODO: Implement validation
     // - Check game is active
     // - Check it's the player's turn
@@ -501,7 +503,7 @@ export class HarmoniesGame extends Harmonies {
     // - Check index is valid (0-4)
     // - Check there's a card at that index
     // - Check player has fewer than 4 animal cards
-    return { ok: true } satisfies CanPerformAction;
+    return { ok: true };
   }
 
   applyTakeAnimalCard(context: ActionContext<"takeAnimalCard">) {
@@ -511,13 +513,13 @@ export class HarmoniesGame extends Harmonies {
     return context.gameState;
   }
 
-  validateTest(_context: ActionContext<"test">) {
+  validateTest(_context: ActionContext<"test">): CanPerformAction {
     // TODO: Implement validation for testing animal card placement
     // - Check game is active
     // - Check it's the player's turn
     // - Check animalCardId is valid
     // - Check hex is on player's board
-    return { ok: true } satisfies CanPerformAction;
+    return { ok: true };
   }
 
   applyTest(context: ActionContext<"test">) {
@@ -527,7 +529,7 @@ export class HarmoniesGame extends Harmonies {
     return context.gameState;
   }
 
-  validateEndTurn(context: ActionContext<"endTurn">) {
+  validateEndTurn(context: ActionContext<"endTurn">): CanPerformAction {
     // TODO: Implement validation
     // - Check game is active
     // - Check it's the player's turn
@@ -536,14 +538,14 @@ export class HarmoniesGame extends Harmonies {
       return {
         ok: false,
         message: "Game is not active",
-      } satisfies CanPerformAction;
+      };
     }
     if (
       context.gameState.privateGameState.currentPlayerId !== context.playerId
     ) {
-      return { ok: false, message: "Not your turn" } satisfies CanPerformAction;
+      return { ok: false, message: "Not your turn" };
     }
-    return { ok: true } satisfies CanPerformAction;
+    return { ok: true };
   }
 
   applyEndTurn(context: ActionContext<"endTurn">) {
@@ -574,7 +576,7 @@ export class HarmoniesGame extends Harmonies {
     );
   }
 
-  validateUndo(context: ActionContext<"undo">) {
+  validateUndo(context: ActionContext<"undo">): CanPerformAction {
     // TODO: Implement validation
     // - Check game is active
     // - Check there's history to undo
@@ -584,13 +586,13 @@ export class HarmoniesGame extends Harmonies {
       return {
         ok: false,
         message: "Game is not active",
-      } satisfies CanPerformAction;
+      };
     }
     if (context.gameState.history.length === 0) {
       return {
         ok: false,
         message: "No actions to undo",
-      } satisfies CanPerformAction;
+      };
     }
     const lastEntry =
       context.gameState.history[context.gameState.history.length - 1];
@@ -598,12 +600,12 @@ export class HarmoniesGame extends Harmonies {
       return {
         ok: false,
         message: "Cannot undo this action",
-      } satisfies CanPerformAction;
+      };
     }
-    return { ok: true } satisfies CanPerformAction;
+    return { ok: true };
   }
 
-  applyUndo(context: ActionContext<"undo">) {
+  applyUndo(context: ActionContext<"undo">): GameState {
     // TODO: Implement undo
     // - Pop the last history entry
     // - Restore the previous game state
@@ -622,7 +624,7 @@ export class HarmoniesGame extends Harmonies {
       ...context.gameState,
       privateGameState: lastEntry.gameState,
       history,
-    } satisfies GameState;
+    };
   }
 
   pushHistory(
@@ -639,7 +641,7 @@ export class HarmoniesGame extends Harmonies {
       ...gameState,
       privateGameState,
       history: [...gameState.history, historyEntry],
-    } satisfies GameState;
+    };
   }
 
   broadcastGameState() {
