@@ -16,6 +16,7 @@ import {
   type PrivateGameState,
   type TokenType,
 } from "../src/sharedTypes";
+import { tokenPlacable } from "../src/util/tokenPlaceable";
 
 export interface Env {
   HARMONIES: DurableObjectNamespace<HarmoniesGame>;
@@ -475,22 +476,126 @@ export class HarmoniesGame extends Harmonies {
     );
   }
 
-  validatePlaceToken(_context: ActionContext<"placeToken">): CanPerformAction {
-    // TODO: Implement validation
-    // - Check game is active
-    // - Check it's the player's turn
-    // - Check player has taken tokens
-    // - Check tokenId is in player's taken tokens
-    // - Check coords is a valid hex on the player's board
-    // - Check placement rules (stacking, adjacency, etc.)
+  validatePlaceToken(context: ActionContext<"placeToken">): CanPerformAction {
+    if (context.gameState.type !== "active") {
+      return {
+        ok: false,
+        message: "Game is not active",
+      };
+    }
+
+    const { privateGameState, grid } = context.gameState;
+    if (privateGameState.currentPlayerId !== context.playerId) {
+      return { ok: false, message: "Not your turn" };
+    }
+
+    const { tokenId, coords } = context.action.payload;
+    const placingToken = privateGameState.tokens.find(
+      (token) => token.id === tokenId,
+    );
+
+    if (!placingToken) {
+      return { ok: false, message: "No token found" };
+    }
+
+    if (
+      placingToken.type !== "taken" ||
+      placingToken.position.player !== context.playerId
+    ) {
+      return { ok: false, message: "Invalid token" };
+    }
+
+    const hasTakenTokens = privateGameState.tokens.some(
+      (token) =>
+        token.type === "taken" && token.position.player === context.playerId,
+    );
+
+    if (!hasTakenTokens) {
+      return { ok: false, message: "No taken tokens" };
+    }
+
+    const isValidCoords = grid
+      .toArray()
+      .some((hex) => hex.toString() === coords);
+    if (!isValidCoords) {
+      return { ok: false, message: "Invalid board location" };
+    }
+
+    const stack: TokenType[] = [];
+    privateGameState.tokens.forEach((token) => {
+      if (
+        token.type === "playerBoard" &&
+        token.position.player === context.playerId &&
+        token.position.place.coords === coords
+      ) {
+        stack[token.position.place.stackPostion] = token;
+      }
+    });
+
+    const canPlace = tokenPlacable(placingToken, stack);
+    if (!canPlace) {
+      return { ok: false, message: "Cannot place token" };
+    }
+
     return { ok: true };
   }
 
   applyPlaceToken(context: ActionContext<"placeToken">) {
-    // TODO: Implement token placement
-    // - Move token from taken to playerBoard
-    // - Update token position with coords and stack position
-    return context.gameState;
+    if (context.gameState.type !== "active") {
+      return context.gameState;
+    }
+
+    const { tokenId, coords } = context.action.payload;
+    const { privateGameState } = context.gameState;
+    const placingToken = privateGameState.tokens.find(
+      (token) => token.id === tokenId,
+    );
+
+    if (!placingToken) {
+      return context.gameState;
+    }
+
+    const stack: TokenType[] = [];
+    privateGameState.tokens.forEach((token) => {
+      if (
+        token.type === "playerBoard" &&
+        token.position.player === context.playerId &&
+        token.position.place.coords === coords
+      ) {
+        stack[token.position.place.stackPostion] = token;
+      }
+    });
+
+    const tokens: PrivateGameState["tokens"] = privateGameState.tokens.map(
+      (token) => {
+        if (token.id === tokenId) {
+          const newToken: TokenType = {
+            ...placingToken,
+            type: "playerBoard",
+            position: {
+              player: context.playerId,
+              place: {
+                coords,
+                stackPostion: stack.length,
+              },
+            },
+          };
+          return newToken;
+        }
+        return token;
+      },
+    );
+
+    const nextPrivateGameState: ImmutablePrivateGameState = {
+      ...privateGameState,
+      tokens,
+    };
+
+    return this.pushHistory(
+      context.gameState,
+      context.action,
+      nextPrivateGameState,
+    );
   }
 
   validateTakeAnimalCard(
