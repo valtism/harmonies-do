@@ -214,13 +214,13 @@ export class HarmoniesGame extends Harmonies {
     try {
       const action = actionSchema.parse(JSON.parse(message));
       const connection = this.sessions.get(ws);
-      invariant(connection, "Connection not found");
+      assert(connection, "Connection not found");
 
       if (action.type === "joinGame") {
         connection.playerId = action.payload.id;
       }
       const playerId = connection.playerId;
-      invariant(playerId, "Missing player id for action");
+      assert(playerId, "Missing player id for action");
 
       this.applyAction(ws, action, playerId);
     } catch (error) {
@@ -912,7 +912,7 @@ function shuffle<T>(array: T[]) {
     .map(({ value }) => value);
 }
 
-function invariant(condition: unknown, message: string): asserts condition {
+function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
     throw new Error(message);
   }
