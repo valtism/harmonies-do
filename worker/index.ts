@@ -599,23 +599,148 @@ export class HarmoniesGame extends Harmonies {
   }
 
   validateTakeAnimalCard(
-    _context: ActionContext<"takeAnimalCard">,
+    context: ActionContext<"takeAnimalCard">,
   ): CanPerformAction {
-    // TODO: Implement validation
-    // - Check game is active
-    // - Check it's the player's turn
-    // - Check player has placed all tokens (or turn conditions met)
-    // - Check index is valid (0-4)
-    // - Check there's a card at that index
-    // - Check player has fewer than 4 animal cards
+    if (context.gameState.type !== "active") {
+      return {
+        ok: false,
+        message: "Game is not active",
+      };
+    }
+
+    const { history, privateGameState } = context.gameState;
+
+    if (privateGameState.currentPlayerId !== context.playerId) {
+      return { ok: false, message: "Not your turn" };
+    }
+
+    const takenIndexes = privateGameState.animalCards.reduce(
+      (takenIndexes, card) => {
+        if (
+          card.type === "playerBoard" &&
+          card.position.playerId === context.playerId
+        ) {
+          takenIndexes.push(card.position.index);
+        }
+        return takenIndexes;
+      },
+      [] as number[],
+    );
+
+    if (takenIndexes.length >= 4) {
+      return { ok: false, message: "All animal card slots are full" };
+    }
+
+    const index = context.action.payload.index;
+    if (index < 0 || index >= 5) {
+      return { ok: false, message: "Invalid card index" };
+    }
+
+    const cardExists = privateGameState.animalCards.some(
+      (card) => card.type === "spread" && card.position.index === index,
+    );
+    if (!cardExists) {
+      return { ok: false, message: "No card at that index" };
+    }
+
+    for (let i = history.length; i > 0; i--) {
+      const entry = history[i - 1];
+      if (entry.gameState.currentPlayerId !== context.playerId) {
+        break;
+      }
+      if (entry.action.type === "takeAnimalCard") {
+        return {
+          ok: false,
+          message: "Already taken an animal card this turn",
+        };
+      }
+    }
+
     return { ok: true };
   }
 
   applyTakeAnimalCard(context: ActionContext<"takeAnimalCard">) {
-    // TODO: Implement taking animal card
-    // - Move card from spread to player's hand
-    // - Draw new card from deck to fill spread
-    return context.gameState;
+    if (context.gameState.type !== "active") {
+      return context.gameState;
+    }
+
+    const { privateGameState } = context.gameState;
+    const takenIndexes = privateGameState.animalCards.reduce(
+      (takenIndexes, card) => {
+        if (
+          card.type === "playerBoard" &&
+          card.position.playerId === context.playerId
+        ) {
+          takenIndexes.push(card.position.index);
+        }
+        return takenIndexes;
+      },
+      [] as number[],
+    );
+
+    let playerBoardFreeIndex = 0;
+    for (let i = 0; i <= 3; i++) {
+      if (!takenIndexes.includes(i)) {
+        playerBoardFreeIndex = i;
+        break;
+      }
+    }
+
+    const animalCards = privateGameState.animalCards.map((card) => {
+      if (
+        card.type === "spread" &&
+        card.position.index === context.action.payload.index
+      ) {
+        return {
+          ...card,
+          type: "playerBoard" as const,
+          position: {
+            playerId: context.playerId,
+            index: playerBoardFreeIndex,
+          },
+        };
+      } else {
+        return card;
+      }
+    });
+
+    const selectedCard = animalCards.find(
+      (card) =>
+        card.type === "playerBoard" &&
+        card.position.playerId === context.playerId &&
+        card.position.index === playerBoardFreeIndex,
+    );
+
+    if (!selectedCard) {
+      throw new Error("Selected card not found");
+    }
+
+    let scoreIndex = selectedCard.scores.length;
+    const animalCubes = privateGameState.animalCubes.map((cube) => {
+      if (scoreIndex < 0) return cube;
+      const newCube = {
+        ...cube,
+        type: "card" as const,
+        position: {
+          cardId: selectedCard.id,
+          index: scoreIndex,
+        },
+      };
+      scoreIndex--;
+      return newCube;
+    });
+
+    const nextPrivateGameState: ImmutablePrivateGameState = {
+      ...privateGameState,
+      animalCards,
+      animalCubes,
+    };
+
+    return this.pushHistory(
+      context.gameState,
+      context.action,
+      nextPrivateGameState,
+    );
   }
 
   validateTest(_context: ActionContext<"test">): CanPerformAction {
