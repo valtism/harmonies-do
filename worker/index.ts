@@ -870,11 +870,6 @@ export class HarmoniesGame extends Harmonies {
   }
 
   validateUndo(context: ActionContext<"undo">): CanPerformAction {
-    // TODO: Implement validation
-    // - Check game is active
-    // - Check there's history to undo
-    // - Check the last action was by this player
-    // - Check the last action is marked as canUndo
     if (context.gameState.type !== "active") {
       return {
         ok: false,
@@ -887,9 +882,8 @@ export class HarmoniesGame extends Harmonies {
         message: "No actions to undo",
       };
     }
-    const lastEntry =
-      context.gameState.history[context.gameState.history.length - 1];
-    if (!lastEntry.action.canUndo) {
+    const lastEntry = context.gameState.history.at(-1);
+    if (!lastEntry?.action.canUndo) {
       return {
         ok: false,
         message: "Cannot undo this action",
@@ -899,9 +893,6 @@ export class HarmoniesGame extends Harmonies {
   }
 
   applyUndo(context: ActionContext<"undo">): GameState {
-    // TODO: Implement undo
-    // - Pop the last history entry
-    // - Restore the previous game state
     if (context.gameState.type !== "active") {
       return context.gameState;
     }
