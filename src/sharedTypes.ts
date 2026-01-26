@@ -152,6 +152,7 @@ export interface DerivedPublicGameState {
     [TokenType | null, TokenType | null, TokenType | null],
     [TokenType | null, TokenType | null, TokenType | null],
   ];
+  TODO_REMOVE_privateGameState: ImmutablePrivateGameState;
 }
 
 const actionSchemas = {

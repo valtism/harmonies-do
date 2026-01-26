@@ -1185,6 +1185,7 @@ export class HarmoniesGame extends Harmonies {
       players: players,
       centralBoard: centralBoard,
       animalCardSpread: animalCardSpread,
+      TODO_REMOVE_privateGameState: this.gameState.privateGameState,
     };
   }
 
