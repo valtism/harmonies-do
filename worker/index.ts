@@ -712,7 +712,7 @@ export class HarmoniesGame extends Harmonies {
       throw new Error("Selected card not found");
     }
 
-    let scoreIndex = selectedCard.scores.length;
+    let scoreIndex = selectedCard.scores.length - 1;
     const animalCubes = privateGameState.animalCubes.map((cube) => {
       if (scoreIndex < 0) return cube;
       const newCube = {
