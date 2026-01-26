@@ -164,7 +164,7 @@ export function PlayerBoard({
                     onClick={async () => {
                       if (selectedAnimalCardId) {
                         sendAction({
-                          type: "test",
+                          type: "placeCube",
                           payload: {
                             animalCardId: selectedAnimalCardId,
                             hex: hex,

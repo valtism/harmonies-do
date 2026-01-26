@@ -182,8 +182,8 @@ const actionSchemas = {
       index: z.number(),
     }),
   }),
-  test: z.object({
-    type: z.literal("test"),
+  placeCube: z.object({
+    type: z.literal("placeCube"),
     payload: z.object({
       animalCardId: z.string(),
       hex: z.object({

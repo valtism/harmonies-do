@@ -16,6 +16,7 @@ import {
   type PrivateGameState,
   type TokenType,
 } from "../src/sharedTypes";
+import { canPlaceCube } from "../src/util/canPlaceCube";
 import { tokenPlacable } from "../src/util/tokenPlaceable";
 
 export interface Env {
@@ -190,13 +191,13 @@ export class HarmoniesGame extends Harmonies {
         validate: (context) => this.validatePlaceToken(context),
         apply: (context) => this.applyPlaceToken(context),
       },
+      placeCube: {
+        validate: (context) => this.validatePlaceCube(context),
+        apply: (context) => this.applyPlaceCube(context),
+      },
       takeAnimalCard: {
         validate: (context) => this.validateTakeAnimalCard(context),
         apply: (context) => this.applyTakeAnimalCard(context),
-      },
-      test: {
-        validate: (context) => this.validateTest(context),
-        apply: (context) => this.applyTest(context),
       },
       endTurn: {
         validate: (context) => this.validateEndTurn(context),
@@ -739,20 +740,117 @@ export class HarmoniesGame extends Harmonies {
     );
   }
 
-  validateTest(_context: ActionContext<"test">): CanPerformAction {
-    // TODO: Implement validation for testing animal card placement
-    // - Check game is active
-    // - Check it's the player's turn
-    // - Check animalCardId is valid
-    // - Check hex is on player's board
+  validatePlaceCube(context: ActionContext<"placeCube">): CanPerformAction {
+    if (context.gameState.type !== "active") {
+      return { ok: false, message: "Game is not active" };
+    }
+
+    const { privateGameState, grid } = context.gameState;
+    if (privateGameState.currentPlayerId !== context.playerId) {
+      return { ok: false, message: "Not your turn" };
+    }
+
+    const { animalCardId, hex } = context.action.payload;
+    const animalCard = privateGameState.animalCards.find(
+      (card) => card.id === animalCardId,
+    );
+
+    if (
+      !animalCard ||
+      animalCard.type !== "playerBoard" ||
+      animalCard.position.playerId !== context.playerId
+    ) {
+      return { ok: false, message: "Animal card not found on your board" };
+    }
+
+    // Check if there are cubes left on the card
+    const cubesOnCard = privateGameState.animalCubes.filter(
+      (cube) => cube.type === "card" && cube.position.cardId === animalCardId,
+    );
+
+    if (cubesOnCard.length === 0) {
+      return { ok: false, message: "No cubes remaining on this animal card" };
+    }
+
+    // Check if hex is on the board
+    const hexExists = grid
+      .toArray()
+      .some((h) => h.q === hex.q && h.r === hex.r);
+    if (!hexExists) {
+      return { ok: false, message: "Invalid hex coordinates" };
+    }
+
+    // Check if hex already has a cube
+    const cubeOnHex = privateGameState.animalCubes.find(
+      (cube) =>
+        cube.type === "playerBoard" &&
+        cube.position.coords === `(${hex.q},${hex.r})`,
+    );
+    if (cubeOnHex) {
+      return { ok: false, message: "This hex already has a cube" };
+    }
+
+    // Derive the public state to get the player's board (needed by canPlaceCube)
+    const publicState = this.derivePublicGameState();
+    const playerBoard = publicState.players[context.playerId].board;
+    const derivedAnimalCards =
+      publicState.players[context.playerId].animalCards;
+    const derivedAnimalCard = derivedAnimalCards.find(
+      (c) => c?.id === animalCardId,
+    );
+
+    if (!canPlaceCube(derivedAnimalCard, grid, hex, playerBoard)) {
+      return { ok: false, message: "Animal pattern does not match the board" };
+    }
+
     return { ok: true };
   }
 
-  applyTest(context: ActionContext<"test">) {
-    // TODO: Implement test action
-    // - Check if animal card pattern matches at given hex
-    // - Return result (potentially mark card as completed)
-    return context.gameState;
+  applyPlaceCube(context: ActionContext<"placeCube">): GameState {
+    if (context.gameState.type !== "active") {
+      return context.gameState;
+    }
+
+    const { animalCardId, hex } = context.action.payload;
+    const { privateGameState } = context.gameState;
+
+    // Find the cube with the highest index on this card
+    const cubesOnCard = privateGameState.animalCubes
+      .filter(
+        (cube) => cube.type === "card" && cube.position.cardId === animalCardId,
+      )
+      .sort(
+        (a, b) =>
+          (b.type === "card" ? b.position.index : 0) -
+          (a.type === "card" ? a.position.index : 0),
+      );
+
+    const cubeToPlace = cubesOnCard[0];
+    if (!cubeToPlace) {
+      return context.gameState;
+    }
+
+    const animalCubes = privateGameState.animalCubes.map((cube) => {
+      if (cube.id === cubeToPlace.id) {
+        return {
+          id: cube.id,
+          type: "playerBoard" as const,
+          position: { coords: `(${hex.q},${hex.r})` },
+        };
+      }
+      return cube;
+    });
+
+    const nextPrivateGameState: ImmutablePrivateGameState = {
+      ...privateGameState,
+      animalCubes,
+    };
+
+    return this.pushHistory(
+      context.gameState,
+      context.action,
+      nextPrivateGameState,
+    );
   }
 
   validateEndTurn(context: ActionContext<"endTurn">): CanPerformAction {
@@ -998,8 +1096,12 @@ export class HarmoniesGame extends Harmonies {
         board: grid.reduce<DerivedPublicGameState["players"][string]["board"]>(
           (board, [q, r]) => {
             const key = `(${q},${r})`;
+            const cubeOnHex = privateGameState.animalCubes.find(
+              (cube) =>
+                cube.type === "playerBoard" && cube.position.coords === key,
+            );
             board[key] = {
-              cube: null,
+              cube: cubeOnHex ? "animal" : null,
               tokens: [],
             };
             return board;
