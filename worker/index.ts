@@ -407,23 +407,21 @@ export class HarmoniesGame extends Harmonies {
       };
     }
 
-    const { history, privateGameState } = context.gameState;
+    const { privateGameState } = context.gameState;
 
     if (privateGameState.currentPlayerId !== context.playerId) {
       return { ok: false, message: "Not your turn" };
     }
 
-    for (let i = history.length; i > 0; i--) {
-      const entry = history[i - 1];
-      if (entry.gameState.currentPlayerId !== context.playerId) {
-        break;
-      }
-      if (entry.action.type === "takeTokens") {
-        return {
-          ok: false,
-          message: "Already taken tokens",
-        };
-      }
+    const hasTakenTokens = this.findInTurnHistory(
+      (entry) => entry.action.type === "takeTokens",
+    );
+
+    if (hasTakenTokens) {
+      return {
+        ok: false,
+        message: "Already taken tokens",
+      };
     }
 
     const hasTokens = privateGameState.tokens.some(
@@ -608,7 +606,7 @@ export class HarmoniesGame extends Harmonies {
       };
     }
 
-    const { history, privateGameState } = context.gameState;
+    const { privateGameState } = context.gameState;
 
     if (privateGameState.currentPlayerId !== context.playerId) {
       return { ok: false, message: "Not your turn" };
@@ -643,17 +641,15 @@ export class HarmoniesGame extends Harmonies {
       return { ok: false, message: "No card at that index" };
     }
 
-    for (let i = history.length; i > 0; i--) {
-      const entry = history[i - 1];
-      if (entry.gameState.currentPlayerId !== context.playerId) {
-        break;
-      }
-      if (entry.action.type === "takeAnimalCard") {
-        return {
-          ok: false,
-          message: "Already taken an animal card this turn",
-        };
-      }
+    const hasTakenAnimalCard = this.findInTurnHistory(
+      (entry) => entry.action.type === "takeAnimalCard",
+    );
+
+    if (hasTakenAnimalCard) {
+      return {
+        ok: false,
+        message: "Already taken an animal card this turn",
+      };
     }
 
     return { ok: true };
@@ -760,42 +756,109 @@ export class HarmoniesGame extends Harmonies {
   }
 
   validateEndTurn(context: ActionContext<"endTurn">): CanPerformAction {
-    // TODO: Implement validation
-    // - Check game is active
-    // - Check it's the player's turn
-    // - Check player has completed required actions (placed tokens, etc.)
     if (context.gameState.type !== "active") {
-      return {
-        ok: false,
-        message: "Game is not active",
-      };
+      return { ok: false, message: "Game is not active" };
     }
-    if (
-      context.gameState.privateGameState.currentPlayerId !== context.playerId
-    ) {
+
+    const { privateGameState } = context.gameState;
+
+    if (privateGameState.currentPlayerId !== context.playerId) {
       return { ok: false, message: "Not your turn" };
     }
+
+    // Check if all taken tokens have been placed
+    const hasPlacedAllTokens = privateGameState.tokens.every(
+      (token) =>
+        !(token.type === "taken" && token.position.player === context.playerId),
+    );
+
+    // Check if the player has taken tokens this turn
+    const hasTakenTokens = this.findInTurnHistory(
+      (entry) => entry.action.type === "takeTokens",
+    );
+
+    if (!hasTakenTokens || !hasPlacedAllTokens) {
+      return { ok: false, message: "Unfinished turn" };
+    }
+
     return { ok: true };
   }
 
-  applyEndTurn(context: ActionContext<"endTurn">) {
-    // TODO: Implement end turn
-    // - Refill central board from pouch
-    // - Advance to next player
-    // - Check for end game conditions
+  applyEndTurn(context: ActionContext<"endTurn">): GameState {
     if (context.gameState.type !== "active") {
       return context.gameState;
     }
 
     const { privateGameState } = context.gameState;
-    const currentIndex = privateGameState.playerIdList.indexOf(
-      context.playerId,
+
+    // Change to next player
+    const index = privateGameState.playerIdList.indexOf(context.playerId);
+    const nextPlayerId =
+      privateGameState.playerIdList[
+        (index + 1) % privateGameState.playerIdList.length
+      ];
+
+    // Find the zone that needs replenishing (the empty zone)
+    const zoneToReplenish = [0, 1, 2, 3, 4].filter((zone) =>
+      privateGameState.tokens.every((token) => {
+        const zoneHasTokens =
+          token.type === "centralBoard" && token.position.zone === zone;
+        return !zoneHasTokens;
+      }),
     );
-    const nextIndex = (currentIndex + 1) % privateGameState.playerIdList.length;
-    const nextPlayerId = privateGameState.playerIdList[nextIndex];
+
+    if (zoneToReplenish.length !== 1) {
+      throw new Error("Invalid central board state");
+    }
+
+    // Move 3 tokens from pouch to the empty zone
+    let tokensToAllocate = 3;
+    const tokens = privateGameState.tokens.map((token) => {
+      if (tokensToAllocate > 0 && token.type === "pouch") {
+        const newToken: TokenType = {
+          ...token,
+          type: "centralBoard",
+          position: { zone: zoneToReplenish[0], place: 3 - tokensToAllocate },
+        };
+        tokensToAllocate--;
+        return newToken;
+      } else {
+        return token;
+      }
+    });
+
+    // Find empty slots in the animal card spread and replenish from deck
+    const emptySpreadIndexes: number[] = [];
+    for (let i = 0; i < 5; i++) {
+      const hasCard = privateGameState.animalCards.some(
+        (card) => card.type === "spread" && card.position.index === i,
+      );
+      if (!hasCard) {
+        emptySpreadIndexes.push(i);
+      }
+    }
+
+    let emptyIndexCursor = 0;
+    const animalCards = privateGameState.animalCards.map((card) => {
+      if (
+        card.type === "deck" &&
+        emptyIndexCursor < emptySpreadIndexes.length
+      ) {
+        const newCard: AnimalCardType = {
+          ...card,
+          type: "spread",
+          position: { index: emptySpreadIndexes[emptyIndexCursor] },
+        };
+        emptyIndexCursor++;
+        return newCard;
+      }
+      return card;
+    });
 
     const nextPrivateGameState: ImmutablePrivateGameState = {
       ...privateGameState,
+      tokens,
+      animalCards,
       currentPlayerId: nextPlayerId,
     };
 
@@ -872,6 +935,28 @@ export class HarmoniesGame extends Harmonies {
       privateGameState,
       history: [...gameState.history, historyEntry],
     };
+  }
+
+  /**
+   * Search through history for the current turn.
+   * Iterates backwards through history until it finds an endTurn action.
+   * Returns true if the callback returns true for any entry.
+   */
+  findInTurnHistory(callback: (entry: HistoryEntry) => boolean): boolean {
+    if (!this.gameState.history) {
+      return false;
+    }
+
+    for (let i = this.gameState.history.length; i > 0; i--) {
+      const entry = this.gameState.history[i - 1];
+      if (entry.action.type === "endTurn") {
+        break;
+      }
+      if (callback(entry)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   broadcastGameState() {
