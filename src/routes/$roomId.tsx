@@ -46,7 +46,6 @@ function Room() {
           break;
         case "error":
           // if (broadcast.playerId !== user.id) return;
-          console.log("here");
           toastQueue.add(
             {
               type: "error",
