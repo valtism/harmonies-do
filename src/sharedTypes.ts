@@ -89,6 +89,7 @@ export type AnimalCubeType =
 export interface Place {
   tokens: TokenType[];
   cube: "animal" | "spirit" | null;
+  cubeId: string | null;
 }
 
 export type ImmutablePrivateGameState = DeepImmutable<PrivateGameState>;

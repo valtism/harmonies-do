@@ -1,5 +1,9 @@
 import { fromCoordinates, Grid, Hex } from "honeycomb-grid";
-import type { Coords, DerivedAnimalCardType, PlayerGameState } from "../sharedTypes";
+import type {
+  Coords,
+  DerivedAnimalCardType,
+  PlayerGameState,
+} from "../sharedTypes";
 
 export function canPlaceCube(
   animalCard: DerivedAnimalCardType | undefined | null,
@@ -8,6 +12,7 @@ export function canPlaceCube(
   playerBoard: PlayerGameState["board"],
 ) {
   if (!animalCard) return false;
+  if (playerBoard[`(${hex.q},${hex.r})`]?.cube) return false;
 
   const positions = animalCard.shape.map((tile) => tile.coordinates);
   const rotations = [0, 1, 2, 3, 4, 5].map((rotation) =>
@@ -26,7 +31,7 @@ export function canPlaceCube(
     // if (trav.length !== 4) return false;
 
     return trav.reduce((isMatch, hex, index) => {
-      const place = playerBoard[hex.toString()];
+      const place = playerBoard[`(${hex.q},${hex.r})`];
       if (!place) return false;
       const placeTokens = place.tokens;
       const topPlaceToken = placeTokens.at(-1);

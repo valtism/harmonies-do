@@ -1,7 +1,7 @@
 import { ViewTransition } from "react";
 import { animalCardImages } from "../constants/animalCardImages";
 import type { DerivedPublicGameState } from "../sharedTypes";
-import { AnimalCube } from "./AnimalCube";
+import { Cube } from "./Cube";
 
 interface AnimalCardProps extends React.ComponentProps<"img"> {
   card: DerivedPublicGameState["players"][number]["animalCards"][number];
@@ -20,9 +20,10 @@ export function AnimalCard({ card, ...props }: AnimalCardProps) {
         {card.scores.map((score, index) => {
           if (!score.cubeId) return null;
           return (
-            <AnimalCube
+            <Cube
               key={score.cubeId}
               id={score.cubeId}
+              type="animal"
               className="absolute right-1"
               style={{ width: "13%", top: `${1 + index * 15.5}%` }}
             />

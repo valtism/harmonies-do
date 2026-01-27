@@ -5,7 +5,12 @@ import BoardSideA from "../assets/boardSideA.webp";
 import { AnimalCard } from "../components/AnimalCard";
 import { PlacingToken } from "../components/PlacingToken";
 import { Token } from "../components/Token";
-import type { ActionType, DerivedPublicGameState, TokenType } from "../sharedTypes";
+import { Cube } from "../components/Cube";
+import type {
+  ActionType,
+  DerivedPublicGameState,
+  TokenType,
+} from "../sharedTypes";
 import { canPlaceCube } from "../util/canPlaceCube";
 import { tokenPlacable } from "../util/tokenPlaceable";
 
@@ -155,6 +160,17 @@ export function PlayerBoard({
                       }}
                     />
                   ))}
+                  {tile?.cube && tile.cubeId && (
+                    <Cube
+                      id={tile.cubeId}
+                      type={tile.cube}
+                      style={{
+                        position: "absolute",
+                        height: "40%",
+                        translate: `0 -${tokens.length * 30}%`,
+                      }}
+                    />
+                  )}
                   {debug && (
                     <div className="pointer-events-none z-10 font-black text-white text-shadow-lg">
                       {key}
@@ -162,7 +178,7 @@ export function PlayerBoard({
                   )}
                   <button
                     onClick={async () => {
-                      if (selectedAnimalCardId) {
+                      if (selectedAnimalCardId && hasMatch) {
                         sendAction({
                           type: "placeCube",
                           payload: {
@@ -170,6 +186,7 @@ export function PlayerBoard({
                             hex: hex,
                           },
                         });
+                        setSelectedAnimalCardId(null);
                       }
 
                       if (!placingToken || !isTokenPlacable) return;

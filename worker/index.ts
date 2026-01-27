@@ -1102,6 +1102,7 @@ export class HarmoniesGame extends Harmonies {
             );
             board[key] = {
               cube: cubeOnHex ? "animal" : null,
+              cubeId: cubeOnHex ? cubeOnHex.id : null,
               tokens: [],
             };
             return board;
