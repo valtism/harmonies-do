@@ -200,6 +200,9 @@ const actionSchemas = {
   undo: z.object({
     type: z.literal("undo"),
   }),
+  simulateEndBoardState: z.object({
+    type: z.literal("simulateEndBoardState"),
+  }),
 };
 
 export type ActionKeys = keyof typeof actionSchemas;

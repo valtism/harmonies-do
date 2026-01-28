@@ -207,6 +207,10 @@ export class HarmoniesGame extends Harmonies {
         validate: (context) => this.validateUndo(context),
         apply: (context) => this.applyUndo(context),
       },
+      simulateEndBoardState: {
+        validate: (context) => this.validateSimulateEndBoardState(context),
+        apply: (context) => this.applySimulateEndBoardState(context),
+      },
     };
   }
 
@@ -1009,6 +1013,106 @@ export class HarmoniesGame extends Harmonies {
     };
   }
 
+  validateSimulateEndBoardState(
+    context: ActionContext<"simulateEndBoardState">,
+  ): CanPerformAction {
+    if (context.gameState.type !== "active") {
+      return { ok: false, message: "Game is not active" };
+    }
+
+    return { ok: true };
+  }
+
+  applySimulateEndBoardState(
+    context: ActionContext<"simulateEndBoardState">,
+  ): GameState {
+    if (context.gameState.type !== "active") {
+      return context.gameState;
+    }
+
+    const { privateGameState } = context.gameState;
+    const gridCoords = grids[privateGameState.boardType];
+
+    // Get all pouch tokens for placing and shuffle them
+    const availableTokens = shuffle(
+      privateGameState.tokens.filter((token) => token.type === "pouch"),
+    );
+
+    // Keep track of tokens we'll modify
+    const tokensToPlace: {
+      token: TokenType;
+      coords: string;
+      stackPosition: number;
+    }[] = [];
+
+    // Track which tokens have been used
+    const usedTokenIds = new Set<string>();
+
+    // Process each hex on the grid
+    for (const [q, r] of gridCoords) {
+      const coords = `(${q},${r})`;
+
+      // Decide randomly how many tokens to try to stack (0-3)
+      // Weight toward lower stacks and include 0 to leave some hexes empty
+      const maxStackHeight = weightedRandomHeight();
+
+      // Build up the stack, validating each token placement
+      const currentStack: TokenType[] = [];
+
+      for (let stackPos = 0; stackPos < maxStackHeight; stackPos++) {
+        // Find a token that can be placed on the current stack
+        const placeableToken = availableTokens.find(
+          (token) =>
+            !usedTokenIds.has(token.id) && tokenPlacable(token, currentStack),
+        );
+
+        if (!placeableToken) {
+          // No more compatible tokens available for this stack position
+          break;
+        }
+
+        usedTokenIds.add(placeableToken.id);
+        tokensToPlace.push({
+          token: placeableToken,
+          coords,
+          stackPosition: stackPos,
+        });
+        currentStack.push(placeableToken);
+      }
+    }
+
+    // Create new tokens array with placements
+    const tokens = privateGameState.tokens.map((token) => {
+      const placement = tokensToPlace.find((p) => p.token.id === token.id);
+      if (placement) {
+        const newToken: TokenType = {
+          ...token,
+          type: "playerBoard",
+          position: {
+            player: context.playerId,
+            place: {
+              coords: placement.coords,
+              stackPostion: placement.stackPosition,
+            },
+          },
+        };
+        return newToken;
+      }
+      return token;
+    });
+
+    const nextPrivateGameState: ImmutablePrivateGameState = {
+      ...privateGameState,
+      tokens,
+    };
+
+    return this.pushHistory(
+      context.gameState,
+      context.action,
+      nextPrivateGameState,
+    );
+  }
+
   pushHistory(
     gameState: Extract<GameState, { type: "active" }>,
     action: ActionType,
@@ -1221,4 +1325,20 @@ function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+/**
+ * Returns a random stack height (0-3) with weighted distribution:
+ * - 0: 10% chance (empty hex)
+ * - 1: 30% chance
+ * - 2: 35% chance
+ * - 3: 25% chance
+ * This creates varied board states for end-game testing
+ */
+function weightedRandomHeight(): number {
+  const rand = Math.random();
+  if (rand < 0.1) return 0;
+  if (rand < 0.4) return 1;
+  if (rand < 0.75) return 2;
+  return 3;
 }

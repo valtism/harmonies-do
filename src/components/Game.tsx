@@ -36,6 +36,16 @@ export function Game({ gameState, sendAction, playerId }: GameProps) {
       >
         End turn
       </button>
+      <button
+        className="rounded bg-amber-600 px-2 py-1 text-white hover:bg-amber-700"
+        onClick={() => {
+          sendAction({
+            type: "simulateEndBoardState",
+          });
+        }}
+      >
+        🐛 Simulate End Board
+      </button>
       <CentralBoard
         state={gameState.centralBoard}
         onClick={(zone) => {
