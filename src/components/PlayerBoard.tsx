@@ -82,6 +82,29 @@ export function PlayerBoard({
 
   return (
     <div>
+      <div className="mb-2">
+        <div className="flex items-center justify-between">
+          <div className="text-lg font-bold text-white">{player.name}</div>
+          {player.score && (
+            <div className="flex items-center gap-2">
+              <div className="text-2xl font-bold text-amber-400">
+                {player.score.total}
+              </div>
+              <div className="text-sm text-stone-400">pts</div>
+            </div>
+          )}
+        </div>
+        {player.score && (
+          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-stone-400">
+            <span className="text-green-400">Trees: {player.score.trees}</span>
+            <span className="text-stone-300">Mountains: {player.score.mountains}</span>
+            <span className="text-yellow-400">Fields: {player.score.fields}</span>
+            <span className="text-orange-400">Buildings: {player.score.buildings}</span>
+            <span className="text-blue-400">Water: {player.score.water}</span>
+            <span className="text-purple-400">Animals: {player.score.animals}</span>
+          </div>
+        )}
+      </div>
       {debug && (
         <div className="flex">
           <div>Animal Card Id:</div>

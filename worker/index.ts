@@ -17,6 +17,7 @@ import {
   type TokenType,
 } from "../src/sharedTypes";
 import { canPlaceCube } from "../src/util/canPlaceCube";
+import { calculatePlayerScore } from "../src/util/scoring";
 import { tokenPlacable } from "../src/util/tokenPlaceable";
 
 export interface Env {
@@ -1283,6 +1284,21 @@ export class HarmoniesGame extends Harmonies {
           animalCard satisfies never;
       }
     });
+
+    // Calculate scores for all players
+    for (const playerId of privateGameState.playerIdList) {
+      const player = players[playerId];
+      const completedCardPoints = player.completedAnimalCards.reduce(
+        (sum, card) => sum + (card.scores[0] ?? 0),
+        0,
+      );
+      player.score = calculatePlayerScore(
+        player.board,
+        this.gameState.grid,
+        privateGameState.boardType,
+        completedCardPoints,
+      );
+    }
 
     return {
       grid: grid,

@@ -103,6 +103,16 @@ export interface PrivateGameState {
   currentPlayerId: string;
 }
 
+export type PlayerScore = {
+  trees: number;
+  mountains: number;
+  fields: number;
+  buildings: number;
+  water: number;
+  animals: number;
+  total: number;
+};
+
 export interface PlayerGameState {
   id: string;
   name: string;
@@ -115,6 +125,7 @@ export interface PlayerGameState {
   ];
   completedAnimalCards: AnimalCardType[];
   board: Record<string, Place>;
+  score?: PlayerScore;
 }
 
 export type PublicState = PublicIdleState | PublicActiveState;
