@@ -525,16 +525,34 @@ export class HarmoniesGame extends Harmonies {
       return { ok: false, message: "Invalid board location" };
     }
 
-    const stack: TokenType[] = [];
+    // Check if there's an animal cube on this hex
+    const hasAnimalCube = privateGameState.animalCubes.some(
+      (cube) =>
+        cube.type === "playerBoard" &&
+        cube.position.coords === coords,
+    );
+    if (hasAnimalCube) {
+      return { ok: false, message: "Cannot place token on a hex with an animal cube" };
+    }
+
+    // Build stack array properly (handle gaps by filtering)
+    const existingTokens: TokenType[] = [];
     privateGameState.tokens.forEach((token) => {
       if (
         token.type === "playerBoard" &&
         token.position.player === context.playerId &&
         token.position.place.coords === coords
       ) {
-        stack[token.position.place.stackPostion] = token;
+        existingTokens[token.position.place.stackPostion] = token;
       }
     });
+    // Filter out any undefined entries (gaps) and rebuild sequential stack
+    const stack = existingTokens.filter((t): t is TokenType => t !== undefined);
+
+    // Check max stack height (3 tokens)
+    if (stack.length >= 3) {
+      return { ok: false, message: "Stack cannot exceed 3 tokens" };
+    }
 
     const canPlace = tokenPlacable(placingToken, stack);
     if (!canPlace) {
@@ -559,16 +577,19 @@ export class HarmoniesGame extends Harmonies {
       return context.gameState;
     }
 
-    const stack: TokenType[] = [];
+    // Build stack array properly (handle gaps by filtering)
+    const existingTokens: TokenType[] = [];
     privateGameState.tokens.forEach((token) => {
       if (
         token.type === "playerBoard" &&
         token.position.player === context.playerId &&
         token.position.place.coords === coords
       ) {
-        stack[token.position.place.stackPostion] = token;
+        existingTokens[token.position.place.stackPostion] = token;
       }
     });
+    // Filter out any undefined entries (gaps) and rebuild sequential stack
+    const stack = existingTokens.filter((t): t is TokenType => t !== undefined);
 
     const tokens: PrivateGameState["tokens"] = privateGameState.tokens.map(
       (token) => {
