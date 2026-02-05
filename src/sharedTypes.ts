@@ -28,21 +28,21 @@ type BaseToken = {
 };
 export type TokenType =
   | (BaseToken & {
-      type: "pouch";
+      type: "supply";
     })
   | (BaseToken & {
       type: "centralBoard";
-      position: { zone: number; place: number };
+      position: { spaceIndex: number; slotIndex: number };
     })
   | (BaseToken & {
       type: "taken";
       position: { player: string; place: number };
     })
   | (BaseToken & {
-      type: "playerBoard";
+      type: "personalBoard";
       position: {
         player: string;
-        place: { coords: string; stackPostion: number };
+        place: { coords: string; stackPosition: number };
       };
     });
 
@@ -55,11 +55,11 @@ export type AnimalCardType =
       position: { index: number };
     })
   | (BaseAnimalCard & {
-      type: "playerBoard";
+      type: "personalBoard";
       position: { playerId: string; index: number };
     })
   | (BaseAnimalCard & {
-      type: "playerCompleted";
+      type: "completed";
       position: { playerId: string };
     });
 
@@ -73,7 +73,7 @@ export type DerivedAnimalCardType = Omit<AnimalCardType, "scores"> & {
 export type AnimalCubeType =
   | {
       id: string;
-      type: "pouch";
+      type: "supply";
     }
   | {
       id: string;
@@ -82,7 +82,7 @@ export type AnimalCubeType =
     }
   | {
       id: string;
-      type: "playerBoard";
+      type: "personalBoard";
       position: { coords: string };
     };
 
@@ -98,7 +98,7 @@ export interface PrivateGameState {
   tokens: TokenType[];
   animalCards: AnimalCardType[];
   animalCubes: AnimalCubeType[];
-  boardType: "A" | "B";
+  personalBoardSide: "A" | "B";
   playerIdList: string[];
   currentPlayerId: string;
 }
@@ -271,15 +271,15 @@ export type CanPerformAction = { ok: true } | { ok: false; message: string };
 export type BaseAnimalCard = {
   id: AnimalCardId;
   scores: readonly number[];
-  shape: readonly Shape[];
+  pattern: readonly PatternCell[];
 };
 
 export type SpiritCard = {
   imageSrc: string;
-  // shape: Shape[];
+  // pattern: PatternCell[];
 };
 
-type Shape = {
+type PatternCell = {
   coordinates: { q: number; r: number };
   topToken: {
     color: ColorType;

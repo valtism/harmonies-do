@@ -381,7 +381,7 @@ export function scoreIslands(
 export function calculatePlayerScore(
   board: PlayerGameState["board"],
   grid: Grid<Hex>,
-  boardType: "A" | "B",
+  personalBoardSide: "A" | "B",
   completedAnimalCardPoints: number = 0,
 ): PlayerScore {
   const trees = scoreTrees(board, grid);
@@ -389,7 +389,9 @@ export function calculatePlayerScore(
   const fields = scoreFields(board, grid);
   const buildings = scoreBuildings(board, grid);
   const water =
-    boardType === "A" ? scoreRiver(board, grid) : scoreIslands(board, grid);
+    personalBoardSide === "A"
+      ? scoreRiver(board, grid)
+      : scoreIslands(board, grid);
   const animals = completedAnimalCardPoints;
 
   return {

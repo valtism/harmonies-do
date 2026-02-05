@@ -13,7 +13,7 @@ const centralBoardStyles: CSSProperties[] = [
 
 interface CentralBoardProps {
   state: DerivedPublicGameState["centralBoard"];
-  onClick: (zone: number) => void;
+  onClick: (spaceIndex: number) => void;
 }
 export function CentralBoard({ state, onClick }: CentralBoardProps) {
   const width = 450;
@@ -22,15 +22,15 @@ export function CentralBoard({ state, onClick }: CentralBoardProps) {
     <div className="relative inline-flex">
       <img src={CentralBoardImg} alt="central board" width={width} />
 
-      {state.map((tokens, index) => {
-        const style = centralBoardStyles[index];
+      {state.map((tokens, spaceIndex) => {
+        const style = centralBoardStyles[spaceIndex];
         return (
           <BoardZone
-            key={index}
+            key={spaceIndex}
             tokens={tokens}
             style={style}
             onClick={() => {
-              onClick(index);
+              onClick(spaceIndex);
             }}
           />
         );

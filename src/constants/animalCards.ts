@@ -4,7 +4,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "alligator",
     scores: [4, 9, 15],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "blue", index: 0 },
@@ -22,7 +22,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "alpaca",
     scores: [5, 12],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "yellow", index: 0 },
@@ -40,7 +40,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "arctic_fox",
     scores: [5, 12],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "yellow", index: 0 },
@@ -58,7 +58,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "bat",
     scores: [3, 6, 10, 15],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "gray", index: 0 },
@@ -72,7 +72,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "bear",
     scores: [5, 11],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "green", index: 0 },
@@ -90,7 +90,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "bee",
     scores: [8, 18],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "green", index: 1 },
@@ -112,7 +112,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "boar",
     scores: [4, 8, 13],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "green", index: 1 },
@@ -126,7 +126,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "crow",
     scores: [4, 9],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "yellow", index: 0 },
@@ -144,7 +144,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "duck",
     scores: [2, 4, 8, 13],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "blue", index: 0 },
@@ -158,7 +158,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "falcon",
     scores: [5, 11],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "gray", index: 2 },
@@ -172,7 +172,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "fennic_fox",
     scores: [4, 9, 16],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "gray", index: 0 },
@@ -190,7 +190,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "fish",
     scores: [3, 6, 10, 16],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "blue", index: 0 },
@@ -204,7 +204,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "flamingo",
     scores: [4, 10, 16],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "blue", index: 0 },
@@ -222,7 +222,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "frog",
     scores: [2, 4, 6, 10, 15],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "blue", index: 0 },
@@ -236,7 +236,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "headgehog",
     scores: [5, 12],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "red", index: 1 },
@@ -254,7 +254,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "kingfisher",
     scores: [5, 11, 18],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "green", index: 2 },
@@ -272,7 +272,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "koala",
     scores: [3, 6, 10, 15],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "green", index: 1 },
@@ -286,7 +286,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "ladybug",
     scores: [2, 5, 8, 12, 17],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "yellow", index: 0 },
@@ -300,7 +300,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "lizard",
     scores: [5, 10, 16],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "red", index: 1 },
@@ -318,7 +318,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "macaque",
     scores: [5, 11],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "gray", index: 1 },
@@ -336,7 +336,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "macaw",
     scores: [4, 9, 14],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "green", index: 1 },
@@ -354,7 +354,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "meerkat",
     scores: [2, 5, 9, 14],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "gray", index: 0 },
@@ -368,7 +368,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "otter",
     scores: [5, 10, 16],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "blue", index: 0 },
@@ -386,7 +386,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "panther",
     scores: [5, 11],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "yellow", index: 0 },
@@ -404,7 +404,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "peacock",
     scores: [5, 10, 17],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "red", index: 1 },
@@ -422,7 +422,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "penguin",
     scores: [4, 10, 16],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "gray", index: 0 },
@@ -440,7 +440,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "rabbit",
     scores: [5, 10, 17],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "green", index: 0 },
@@ -458,7 +458,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "raccoon",
     scores: [6, 12],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "yellow", index: 0 },
@@ -480,7 +480,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "ray",
     scores: [4, 10, 16],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "blue", index: 0 },
@@ -498,7 +498,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "shrew",
     scores: [5, 10, 17],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "red", index: 1 },
@@ -516,7 +516,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "squirrel",
     scores: [4.9, 15],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "red", index: 1 },
@@ -530,7 +530,7 @@ export const allAnimalCards: BaseAnimalCard[] = [
   {
     id: "wolf",
     scores: [4, 10, 16],
-    shape: [
+    pattern: [
       {
         coordinates: { q: 0, r: 0 },
         topToken: { color: "green", index: 2 },

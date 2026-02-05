@@ -9,12 +9,12 @@ export function canPlaceCube(
   animalCard: DerivedAnimalCardType | undefined | null,
   grid: Grid<Hex>,
   hex: Coords,
-  playerBoard: PlayerGameState["board"],
+  personalBoard: PlayerGameState["board"],
 ) {
   if (!animalCard) return false;
-  if (playerBoard[`(${hex.q},${hex.r})`]?.cube) return false;
+  if (personalBoard[`(${hex.q},${hex.r})`]?.cube) return false;
 
-  const positions = animalCard.shape.map((tile) => tile.coordinates);
+  const positions = animalCard.pattern.map((tile) => tile.coordinates);
   const rotations = [0, 1, 2, 3, 4, 5].map((rotation) =>
     positions.map((position) => rotate(position, rotation)),
   );
@@ -31,12 +31,12 @@ export function canPlaceCube(
     // if (trav.length !== 4) return false;
 
     return trav.reduce((isMatch, hex, index) => {
-      const place = playerBoard[`(${hex.q},${hex.r})`];
+      const place = personalBoard[`(${hex.q},${hex.r})`];
       if (!place) return false;
       const placeTokens = place.tokens;
       const topPlaceToken = placeTokens.at(-1);
       if (!topPlaceToken) return false;
-      const topToken = animalCard.shape[index]!.topToken;
+      const topToken = animalCard.pattern[index]!.topToken;
       const stackMatch =
         placeTokens.length - 1 === topToken.index &&
         topPlaceToken.color === topToken.color;

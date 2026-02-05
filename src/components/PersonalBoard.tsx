@@ -16,16 +16,16 @@ import { tokenPlacable } from "../util/tokenPlaceable";
 
 const debug = true;
 
-interface PlayerBoardProps {
+interface PersonalBoardProps {
   playerId: string;
   gameState: DerivedPublicGameState;
   sendAction: (action: ActionType) => void;
 }
-export function PlayerBoard({
+export function PersonalBoard({
   playerId,
   gameState,
   sendAction,
-}: PlayerBoardProps) {
+}: PersonalBoardProps) {
   const player = gameState.players[playerId];
   if (!player) throw new Error("Player not found");
 
@@ -141,7 +141,7 @@ export function PlayerBoard({
         ))}
       </div>
       <div ref={ref} className="relative inline-block">
-        <img src={BoardSideA} alt="player board" />
+        <img src={BoardSideA} alt="personal board" />
 
         <div className="absolute inset-0 rotate-[0.5deg]">
           {Array.from(grid).map((hex) => {

@@ -323,34 +323,34 @@ export class HarmoniesGame extends Harmonies {
   }
 
   applyStartGame(context: ActionContext<"startGame">): GameState {
-    // TODO make boardType dynamic
-    const boardType = "A";
+    // TODO make personalBoardSide dynamic
+    const personalBoardSide = "A";
 
     const Hex = defineHex({
       dimensions: 1,
       orientation: Orientation.FLAT,
       origin: "topLeft",
     });
-    const grid = new Grid(Hex, grids[boardType]);
+    const grid = new Grid(Hex, grids[personalBoardSide]);
 
     const playerIdList = shuffle(Array.from(context.gameState.players.keys()));
 
     const tokens = shuffle([...allTokens]).map((color, index) => {
       if (index < 15) {
-        const zone = Math.floor(index / 3);
-        const place = index % 3;
+        const spaceIndex = Math.floor(index / 3);
+        const slotIndex = index % 3;
         const token: TokenType = {
           id: `token-${crypto.randomUUID()}`,
           color,
           type: "centralBoard",
-          position: { zone, place },
+          position: { spaceIndex, slotIndex },
         };
         return token;
       } else {
         const token: TokenType = {
           id: `token-${crypto.randomUUID()}`,
           color,
-          type: "pouch",
+          type: "supply",
         };
         return token;
       }
@@ -379,7 +379,7 @@ export class HarmoniesGame extends Harmonies {
       length: 66,
     }).map(() => ({
       id: `animal-cube-${crypto.randomUUID()}`,
-      type: "pouch",
+      type: "supply",
     }));
 
     const currentPlayerId = playerIdList[0];
@@ -388,7 +388,7 @@ export class HarmoniesGame extends Harmonies {
     }
 
     const privateGameState: ImmutablePrivateGameState = {
-      boardType: boardType,
+      personalBoardSide: personalBoardSide,
       playerIdList: playerIdList,
       currentPlayerId: currentPlayerId,
       tokens: tokens,
@@ -433,13 +433,13 @@ export class HarmoniesGame extends Harmonies {
     const hasTokens = privateGameState.tokens.some(
       (token) =>
         token.type === "centralBoard" &&
-        token.position.zone === context.action.payload,
+        token.position.spaceIndex === context.action.payload,
     );
 
     if (!hasTokens) {
       return {
         ok: false,
-        message: "No tokens in that zone",
+        message: "No tokens in that space",
       };
     }
 
@@ -451,18 +451,21 @@ export class HarmoniesGame extends Harmonies {
       return context.gameState;
     }
 
-    const zone = context.action.payload;
-    let place = 0;
+    const spaceIndex = context.action.payload;
+    let slotIndex = 0;
 
     const tokens = context.gameState.privateGameState.tokens.map((token) => {
-      if (token.type === "centralBoard" && token.position.zone === zone) {
+      if (
+        token.type === "centralBoard" &&
+        token.position.spaceIndex === spaceIndex
+      ) {
         const newToken: TokenType = {
           id: token.id,
           color: token.color,
           type: "taken",
-          position: { player: context.playerId, place: place },
+          position: { player: context.playerId, place: slotIndex },
         };
-        place += 1;
+        slotIndex += 1;
         return newToken;
       }
       return token;
@@ -528,7 +531,7 @@ export class HarmoniesGame extends Harmonies {
     // Check if there's an animal cube on this hex
     const hasAnimalCube = privateGameState.animalCubes.some(
       (cube) =>
-        cube.type === "playerBoard" &&
+        cube.type === "personalBoard" &&
         cube.position.coords === coords,
     );
     if (hasAnimalCube) {
@@ -539,11 +542,11 @@ export class HarmoniesGame extends Harmonies {
     const existingTokens: TokenType[] = [];
     privateGameState.tokens.forEach((token) => {
       if (
-        token.type === "playerBoard" &&
+        token.type === "personalBoard" &&
         token.position.player === context.playerId &&
         token.position.place.coords === coords
       ) {
-        existingTokens[token.position.place.stackPostion] = token;
+        existingTokens[token.position.place.stackPosition] = token;
       }
     });
     // Filter out any undefined entries (gaps) and rebuild sequential stack
@@ -581,11 +584,11 @@ export class HarmoniesGame extends Harmonies {
     const existingTokens: TokenType[] = [];
     privateGameState.tokens.forEach((token) => {
       if (
-        token.type === "playerBoard" &&
+        token.type === "personalBoard" &&
         token.position.player === context.playerId &&
         token.position.place.coords === coords
       ) {
-        existingTokens[token.position.place.stackPostion] = token;
+        existingTokens[token.position.place.stackPosition] = token;
       }
     });
     // Filter out any undefined entries (gaps) and rebuild sequential stack
@@ -596,12 +599,12 @@ export class HarmoniesGame extends Harmonies {
         if (token.id === tokenId) {
           const newToken: TokenType = {
             ...placingToken,
-            type: "playerBoard",
+            type: "personalBoard",
             position: {
               player: context.playerId,
               place: {
                 coords,
-                stackPostion: stack.length,
+                stackPosition: stack.length,
               },
             },
           };
@@ -642,7 +645,7 @@ export class HarmoniesGame extends Harmonies {
     const takenIndexes = privateGameState.animalCards.reduce(
       (takenIndexes, card) => {
         if (
-          card.type === "playerBoard" &&
+          card.type === "personalBoard" &&
           card.position.playerId === context.playerId
         ) {
           takenIndexes.push(card.position.index);
@@ -691,7 +694,7 @@ export class HarmoniesGame extends Harmonies {
     const takenIndexes = privateGameState.animalCards.reduce(
       (takenIndexes, card) => {
         if (
-          card.type === "playerBoard" &&
+          card.type === "personalBoard" &&
           card.position.playerId === context.playerId
         ) {
           takenIndexes.push(card.position.index);
@@ -701,10 +704,10 @@ export class HarmoniesGame extends Harmonies {
       [] as number[],
     );
 
-    let playerBoardFreeIndex = 0;
+    let personalBoardFreeIndex = 0;
     for (let i = 0; i <= 3; i++) {
       if (!takenIndexes.includes(i)) {
-        playerBoardFreeIndex = i;
+        personalBoardFreeIndex = i;
         break;
       }
     }
@@ -716,10 +719,10 @@ export class HarmoniesGame extends Harmonies {
       ) {
         return {
           ...card,
-          type: "playerBoard" as const,
+          type: "personalBoard" as const,
           position: {
             playerId: context.playerId,
-            index: playerBoardFreeIndex,
+            index: personalBoardFreeIndex,
           },
         };
       } else {
@@ -729,9 +732,9 @@ export class HarmoniesGame extends Harmonies {
 
     const selectedCard = animalCards.find(
       (card) =>
-        card.type === "playerBoard" &&
+        card.type === "personalBoard" &&
         card.position.playerId === context.playerId &&
-        card.position.index === playerBoardFreeIndex,
+        card.position.index === personalBoardFreeIndex,
     );
 
     if (!selectedCard) {
@@ -783,7 +786,7 @@ export class HarmoniesGame extends Harmonies {
 
     if (
       !animalCard ||
-      animalCard.type !== "playerBoard" ||
+      animalCard.type !== "personalBoard" ||
       animalCard.position.playerId !== context.playerId
     ) {
       return { ok: false, message: "Animal card not found on your board" };
@@ -809,7 +812,7 @@ export class HarmoniesGame extends Harmonies {
     // Check if hex already has a cube
     const cubeOnHex = privateGameState.animalCubes.find(
       (cube) =>
-        cube.type === "playerBoard" &&
+        cube.type === "personalBoard" &&
         cube.position.coords === `(${hex.q},${hex.r})`,
     );
     if (cubeOnHex) {
@@ -818,14 +821,14 @@ export class HarmoniesGame extends Harmonies {
 
     // Derive the public state to get the player's board (needed by canPlaceCube)
     const publicState = this.derivePublicGameState();
-    const playerBoard = publicState.players[context.playerId].board;
+    const personalBoard = publicState.players[context.playerId].board;
     const derivedAnimalCards =
       publicState.players[context.playerId].animalCards;
     const derivedAnimalCard = derivedAnimalCards.find(
       (c) => c?.id === animalCardId,
     );
 
-    if (!canPlaceCube(derivedAnimalCard, grid, hex, playerBoard)) {
+    if (!canPlaceCube(derivedAnimalCard, grid, hex, personalBoard)) {
       return { ok: false, message: "Animal pattern does not match the board" };
     }
 
@@ -860,7 +863,7 @@ export class HarmoniesGame extends Harmonies {
       if (cube.id === cubeToPlace.id) {
         return {
           id: cube.id,
-          type: "playerBoard" as const,
+          type: "personalBoard" as const,
           position: { coords: `(${hex.q},${hex.r})` },
         };
       }
@@ -922,27 +925,31 @@ export class HarmoniesGame extends Harmonies {
         (index + 1) % privateGameState.playerIdList.length
       ];
 
-    // Find the zone that needs replenishing (the empty zone)
-    const zoneToReplenish = [0, 1, 2, 3, 4].filter((zone) =>
+    // Find the space that needs replenishing (the empty space)
+    const spaceIndexToReplenish = [0, 1, 2, 3, 4].filter((spaceIndex) =>
       privateGameState.tokens.every((token) => {
-        const zoneHasTokens =
-          token.type === "centralBoard" && token.position.zone === zone;
-        return !zoneHasTokens;
+        const spaceHasTokens =
+          token.type === "centralBoard" &&
+          token.position.spaceIndex === spaceIndex;
+        return !spaceHasTokens;
       }),
     );
 
-    if (zoneToReplenish.length !== 1) {
+    if (spaceIndexToReplenish.length !== 1) {
       throw new Error("Invalid central board state");
     }
 
-    // Move 3 tokens from pouch to the empty zone
+    // Move 3 tokens from supply to the empty space
     let tokensToAllocate = 3;
     const tokens = privateGameState.tokens.map((token) => {
-      if (tokensToAllocate > 0 && token.type === "pouch") {
+      if (tokensToAllocate > 0 && token.type === "supply") {
         const newToken: TokenType = {
           ...token,
           type: "centralBoard",
-          position: { zone: zoneToReplenish[0], place: 3 - tokensToAllocate },
+          position: {
+            spaceIndex: spaceIndexToReplenish[0],
+            slotIndex: 3 - tokensToAllocate,
+          },
         };
         tokensToAllocate--;
         return newToken;
@@ -1053,11 +1060,11 @@ export class HarmoniesGame extends Harmonies {
     }
 
     const { privateGameState } = context.gameState;
-    const gridCoords = grids[privateGameState.boardType];
+    const gridCoords = grids[privateGameState.personalBoardSide];
 
-    // Get all pouch tokens for placing and shuffle them
+    // Get all supply tokens for placing and shuffle them
     const availableTokens = shuffle(
-      privateGameState.tokens.filter((token) => token.type === "pouch"),
+      privateGameState.tokens.filter((token) => token.type === "supply"),
     );
 
     // Keep track of tokens we'll modify
@@ -1109,12 +1116,12 @@ export class HarmoniesGame extends Harmonies {
       if (placement) {
         const newToken: TokenType = {
           ...token,
-          type: "playerBoard",
+          type: "personalBoard",
           position: {
             player: context.playerId,
             place: {
               coords: placement.coords,
-              stackPostion: placement.stackPosition,
+              stackPosition: placement.stackPosition,
             },
           },
         };
@@ -1200,7 +1207,7 @@ export class HarmoniesGame extends Harmonies {
 
     const privateGameState = this.gameState.privateGameState;
 
-    const grid = grids[privateGameState.boardType];
+    const grid = grids[privateGameState.personalBoardSide];
 
     const centralBoard: DerivedPublicGameState["centralBoard"] = [
       [null, null, null],
@@ -1224,7 +1231,7 @@ export class HarmoniesGame extends Harmonies {
             const key = `(${q},${r})`;
             const cubeOnHex = privateGameState.animalCubes.find(
               (cube) =>
-                cube.type === "playerBoard" && cube.position.coords === key,
+                cube.type === "personalBoard" && cube.position.coords === key,
             );
             board[key] = {
               cube: cubeOnHex ? "animal" : null,
@@ -1242,19 +1249,20 @@ export class HarmoniesGame extends Harmonies {
     // Iterate over the tokens and distribute them
     privateGameState.tokens.forEach((token) => {
       switch (token.type) {
-        case "pouch":
+        case "supply":
           break;
         case "centralBoard":
-          centralBoard[token.position.zone][token.position.place] = token;
+          centralBoard[token.position.spaceIndex][token.position.slotIndex] =
+            token;
           break;
         case "taken":
           players[token.position.player].takenTokens[token.position.place] =
             token;
           break;
-        case "playerBoard":
+        case "personalBoard":
           players[token.position.player].board[
             token.position.place.coords
-          ].tokens[token.position.place.stackPostion] = token;
+          ].tokens[token.position.place.stackPosition] = token;
           break;
         default:
           token satisfies never;
@@ -1279,7 +1287,7 @@ export class HarmoniesGame extends Harmonies {
         case "spread":
           animalCardSpread[animalCard.position.index] = animalCard;
           break;
-        case "playerBoard":
+        case "personalBoard":
           players[animalCard.position.playerId].animalCards[
             animalCard.position.index
           ] = {
@@ -1296,7 +1304,7 @@ export class HarmoniesGame extends Harmonies {
             })),
           };
           break;
-        case "playerCompleted":
+        case "completed":
           players[animalCard.position.playerId].completedAnimalCards.push(
             animalCard,
           );
@@ -1316,7 +1324,7 @@ export class HarmoniesGame extends Harmonies {
       player.score = calculatePlayerScore(
         player.board,
         this.gameState.grid,
-        privateGameState.boardType,
+        privateGameState.personalBoardSide,
         completedCardPoints,
       );
     }

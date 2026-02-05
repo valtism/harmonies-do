@@ -1,6 +1,6 @@
 import { AnimalCardSpread } from "../components/AnimalCardSpread";
 import { CentralBoard } from "../components/CentralBoard";
-import { PlayerBoard } from "../components/PlayerBoard";
+import { PersonalBoard } from "../components/PersonalBoard";
 import type { ActionType, DerivedPublicGameState } from "../sharedTypes";
 
 interface GameProps {
@@ -48,10 +48,10 @@ export function Game({ gameState, sendAction, playerId }: GameProps) {
       </button>
       <CentralBoard
         state={gameState.centralBoard}
-        onClick={(zone) => {
+        onClick={(spaceIndex) => {
           sendAction({
             type: "takeTokens",
-            payload: zone,
+            payload: spaceIndex,
           });
         }}
       />
@@ -65,7 +65,7 @@ export function Game({ gameState, sendAction, playerId }: GameProps) {
 
       {Object.values(gameState.players).map((player) => (
         <div key={player.id} style={{ width: 400 }}>
-          <PlayerBoard
+          <PersonalBoard
             playerId={player.id}
             gameState={gameState}
             sendAction={sendAction}
