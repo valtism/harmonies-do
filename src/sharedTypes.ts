@@ -271,20 +271,18 @@ export type CanPerformAction = { ok: true } | { ok: false; message: string };
 export type BaseAnimalCard = {
   id: AnimalCardId;
   scores: readonly number[];
-  pattern: readonly PatternCell[];
+  pattern: readonly HabitatRequirement[];
 };
 
 export type SpiritCard = {
   imageSrc: string;
-  // pattern: PatternCell[];
+  // pattern: HabitatRequirement[];
 };
 
-type PatternCell = {
+type HabitatRequirement = {
   coordinates: { q: number; r: number };
-  topToken: {
-    color: ColorType;
-    index: number;
-  };
+  topColor: ColorType;
+  stackHeight: number;
 };
 
 export type AnimalCardId = keyof typeof animalCardImages;

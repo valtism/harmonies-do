@@ -7,15 +7,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 2, r: 0 },
-        topToken: { color: "green", index: 2 },
+        topColor: "green", stackHeight: 3,
       },
     ],
   },
@@ -25,15 +25,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 2, r: 0 },
-        topToken: { color: "gray", index: 1 },
+        topColor: "gray", stackHeight: 2,
       },
     ],
   },
@@ -43,15 +43,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "green", index: 1 },
+        topColor: "green", stackHeight: 2,
       },
       {
         coordinates: { q: -1, r: 1 },
-        topToken: { color: "green", index: 1 },
+        topColor: "green", stackHeight: 2,
       },
     ],
   },
@@ -61,11 +61,11 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "gray", index: 0 },
+        topColor: "gray", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "green", index: 2 },
+        topColor: "green", stackHeight: 3,
       },
     ],
   },
@@ -75,15 +75,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "green", index: 0 },
+        topColor: "green", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "gray", index: 1 },
+        topColor: "gray", stackHeight: 2,
       },
       {
         coordinates: { q: 0, r: 1 },
-        topToken: { color: "gray", index: 1 },
+        topColor: "gray", stackHeight: 2,
       },
     ],
   },
@@ -93,19 +93,19 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "green", index: 1 },
+        topColor: "green", stackHeight: 2,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 0, r: 1 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: -1, r: 1 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
     ],
   },
@@ -115,11 +115,11 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "green", index: 1 },
+        topColor: "green", stackHeight: 2,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "red", index: 1 },
+        topColor: "red", stackHeight: 2,
       },
     ],
   },
@@ -129,15 +129,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "red", index: 1 },
+        topColor: "red", stackHeight: 2,
       },
       {
         coordinates: { q: -1, r: 1 },
-        topToken: { color: "red", index: 1 },
+        topColor: "red", stackHeight: 2,
       },
     ],
   },
@@ -147,11 +147,11 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "red", index: 1 },
+        topColor: "red", stackHeight: 2,
       },
     ],
   },
@@ -161,11 +161,11 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "gray", index: 2 },
+        topColor: "gray", stackHeight: 3,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
     ],
   },
@@ -175,15 +175,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "gray", index: 0 },
+        topColor: "gray", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "gray", index: 0 },
+        topColor: "gray", stackHeight: 1,
       },
       {
         coordinates: { q: 2, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
     ],
   },
@@ -193,11 +193,11 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "gray", index: 2 },
+        topColor: "gray", stackHeight: 3,
       },
     ],
   },
@@ -207,15 +207,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 0, r: 1 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
     ],
   },
@@ -225,11 +225,11 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "green", index: 0 },
+        topColor: "green", stackHeight: 1,
       },
     ],
   },
@@ -239,15 +239,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "red", index: 1 },
+        topColor: "red", stackHeight: 2,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "green", index: 1 },
+        topColor: "green", stackHeight: 2,
       },
       {
         coordinates: { q: 0, r: 1 },
-        topToken: { color: "green", index: 1 },
+        topColor: "green", stackHeight: 2,
       },
     ],
   },
@@ -257,15 +257,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "green", index: 2 },
+        topColor: "green", stackHeight: 3,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: -1, r: 1 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
     ],
   },
@@ -275,11 +275,11 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "green", index: 1 },
+        topColor: "green", stackHeight: 2,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "green", index: 0 },
+        topColor: "green", stackHeight: 1,
       },
     ],
   },
@@ -289,11 +289,11 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "green", index: 0 },
+        topColor: "green", stackHeight: 1,
       },
     ],
   },
@@ -303,15 +303,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "red", index: 1 },
+        topColor: "red", stackHeight: 2,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 2, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
     ],
   },
@@ -321,15 +321,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "gray", index: 1 },
+        topColor: "gray", stackHeight: 2,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 0, r: 1 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
     ],
   },
@@ -339,15 +339,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "green", index: 1 },
+        topColor: "green", stackHeight: 2,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 0, r: 1 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
     ],
   },
@@ -357,11 +357,11 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "gray", index: 0 },
+        topColor: "gray", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
     ],
   },
@@ -371,15 +371,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "green", index: 0 },
+        topColor: "green", stackHeight: 1,
       },
       {
         coordinates: { q: 2, r: 0 },
-        topToken: { color: "green", index: 0 },
+        topColor: "green", stackHeight: 1,
       },
     ],
   },
@@ -389,15 +389,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "green", index: 0 },
+        topColor: "green", stackHeight: 1,
       },
       {
         coordinates: { q: 2, r: 0 },
-        topToken: { color: "green", index: 0 },
+        topColor: "green", stackHeight: 1,
       },
     ],
   },
@@ -407,15 +407,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "red", index: 1 },
+        topColor: "red", stackHeight: 2,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: -1, r: 1 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
     ],
   },
@@ -425,15 +425,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "gray", index: 0 },
+        topColor: "gray", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: -1, r: 1 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
     ],
   },
@@ -443,15 +443,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "green", index: 0 },
+        topColor: "green", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "green", index: 0 },
+        topColor: "green", stackHeight: 1,
       },
       {
         coordinates: { q: 2, r: 0 },
-        topToken: { color: "red", index: 1 },
+        topColor: "red", stackHeight: 2,
       },
     ],
   },
@@ -461,19 +461,19 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 0, r: 1 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: -1, r: 1 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
     ],
   },
@@ -483,15 +483,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "blue", index: 0 },
+        topColor: "blue", stackHeight: 1,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "gray", index: 0 },
+        topColor: "gray", stackHeight: 1,
       },
       {
         coordinates: { q: 0, r: 1 },
-        topToken: { color: "gray", index: 0 },
+        topColor: "gray", stackHeight: 1,
       },
     ],
   },
@@ -501,15 +501,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "red", index: 1 },
+        topColor: "red", stackHeight: 2,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: -1, r: 1 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
     ],
   },
@@ -519,11 +519,11 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "red", index: 1 },
+        topColor: "red", stackHeight: 2,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "green", index: 2 },
+        topColor: "green", stackHeight: 3,
       },
     ],
   },
@@ -533,15 +533,15 @@ export const allAnimalCards: BaseAnimalCard[] = [
     pattern: [
       {
         coordinates: { q: 0, r: 0 },
-        topToken: { color: "green", index: 2 },
+        topColor: "green", stackHeight: 3,
       },
       {
         coordinates: { q: 1, r: 0 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
       {
         coordinates: { q: 0, r: 1 },
-        topToken: { color: "yellow", index: 0 },
+        topColor: "yellow", stackHeight: 1,
       },
     ],
   },

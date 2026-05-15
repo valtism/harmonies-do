@@ -35,10 +35,10 @@ export function canPlaceCube(
       const placeTokens = place.tokens;
       const topPlaceToken = placeTokens.at(-1);
       if (!topPlaceToken) return false;
-      const topToken = animalCard.pattern[index]!.topToken;
+      const requirement = animalCard.pattern[index]!;
       const stackMatch =
-        placeTokens.length - 1 === topToken.index &&
-        topPlaceToken.color === topToken.color;
+        placeTokens.length === requirement.stackHeight &&
+        topPlaceToken.color === requirement.topColor;
       return isMatch && stackMatch;
     }, true);
   });
