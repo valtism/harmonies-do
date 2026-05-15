@@ -86,7 +86,7 @@ export type AnimalCubeType =
       position: { coords: string };
     };
 
-export interface Place {
+export interface HexState {
   tokens: TokenType[];
   cube: "animal" | "spirit" | null;
   cubeId: string | null;
@@ -124,7 +124,7 @@ export interface PlayerGameState {
     DerivedAnimalCardType | null,
   ];
   completedAnimalCards: AnimalCardType[];
-  board: Record<string, Place>;
+  board: Record<string, HexState>;
   score?: PlayerScore;
 }
 
