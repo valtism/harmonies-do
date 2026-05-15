@@ -55,7 +55,7 @@ export type AnimalCardType =
       position: { index: number };
     })
   | (BaseAnimalCard & {
-      type: "personalBoard";
+      type: "held";
       position: { playerId: string; index: number };
     })
   | (BaseAnimalCard & {

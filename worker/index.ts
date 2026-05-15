@@ -645,7 +645,7 @@ export class HarmoniesGame extends Harmonies {
     const takenIndexes = privateGameState.animalCards.reduce(
       (takenIndexes, card) => {
         if (
-          card.type === "personalBoard" &&
+          card.type === "held" &&
           card.position.playerId === context.playerId
         ) {
           takenIndexes.push(card.position.index);
@@ -694,7 +694,7 @@ export class HarmoniesGame extends Harmonies {
     const takenIndexes = privateGameState.animalCards.reduce(
       (takenIndexes, card) => {
         if (
-          card.type === "personalBoard" &&
+          card.type === "held" &&
           card.position.playerId === context.playerId
         ) {
           takenIndexes.push(card.position.index);
@@ -719,7 +719,7 @@ export class HarmoniesGame extends Harmonies {
       ) {
         return {
           ...card,
-          type: "personalBoard" as const,
+          type: "held" as const,
           position: {
             playerId: context.playerId,
             index: personalBoardFreeIndex,
@@ -732,7 +732,7 @@ export class HarmoniesGame extends Harmonies {
 
     const selectedCard = animalCards.find(
       (card) =>
-        card.type === "personalBoard" &&
+        card.type === "held" &&
         card.position.playerId === context.playerId &&
         card.position.index === personalBoardFreeIndex,
     );
@@ -786,7 +786,7 @@ export class HarmoniesGame extends Harmonies {
 
     if (
       !animalCard ||
-      animalCard.type !== "personalBoard" ||
+      animalCard.type !== "held" ||
       animalCard.position.playerId !== context.playerId
     ) {
       return { ok: false, message: "Animal card not found on your board" };
@@ -882,11 +882,11 @@ export class HarmoniesGame extends Harmonies {
       const completedCard = privateGameState.animalCards.find(
         (card) =>
           card.id === animalCardId &&
-          card.type === "personalBoard" &&
+          card.type === "held" &&
           card.position.playerId === context.playerId,
       );
 
-      if (completedCard && completedCard.type === "personalBoard") {
+      if (completedCard && completedCard.type === "held") {
         const completedIndex = completedCard.position.index;
 
         animalCards = privateGameState.animalCards.map((card) => {
@@ -899,7 +899,7 @@ export class HarmoniesGame extends Harmonies {
           }
           // Shift cards with higher index down by 1
           if (
-            card.type === "personalBoard" &&
+            card.type === "held" &&
             card.position.playerId === context.playerId &&
             card.position.index > completedIndex
           ) {
@@ -1334,7 +1334,7 @@ export class HarmoniesGame extends Harmonies {
         case "spread":
           animalCardSpread[animalCard.position.index] = animalCard;
           break;
-        case "personalBoard":
+        case "held":
           players[animalCard.position.playerId].animalCards[
             animalCard.position.index
           ] = {
