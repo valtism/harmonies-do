@@ -36,7 +36,7 @@ export type TokenType =
     })
   | (BaseToken & {
       type: "taken";
-      position: { player: string; place: number };
+      position: { player: string; slot: number };
     })
   | (BaseToken & {
       type: "personalBoard";

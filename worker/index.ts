@@ -463,7 +463,7 @@ export class HarmoniesGame extends Harmonies {
           id: token.id,
           color: token.color,
           type: "taken",
-          position: { player: context.playerId, place: slotIndex },
+          position: { player: context.playerId, slot: slotIndex },
         };
         slotIndex += 1;
         return newToken;
@@ -1303,7 +1303,7 @@ export class HarmoniesGame extends Harmonies {
             token;
           break;
         case "taken":
-          players[token.position.player].takenTokens[token.position.place] =
+          players[token.position.player].takenTokens[token.position.slot] =
             token;
           break;
         case "personalBoard":
