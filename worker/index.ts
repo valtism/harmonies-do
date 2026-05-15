@@ -544,9 +544,9 @@ export class HarmoniesGame extends Harmonies {
       if (
         token.type === "personalBoard" &&
         token.position.player === context.playerId &&
-        token.position.place.coords === coords
+        token.position.hex.coords === coords
       ) {
-        existingTokens[token.position.place.stackPosition] = token;
+        existingTokens[token.position.hex.stackPosition] = token;
       }
     });
     // Filter out any undefined entries (gaps) and rebuild sequential stack
@@ -586,9 +586,9 @@ export class HarmoniesGame extends Harmonies {
       if (
         token.type === "personalBoard" &&
         token.position.player === context.playerId &&
-        token.position.place.coords === coords
+        token.position.hex.coords === coords
       ) {
-        existingTokens[token.position.place.stackPosition] = token;
+        existingTokens[token.position.hex.stackPosition] = token;
       }
     });
     // Filter out any undefined entries (gaps) and rebuild sequential stack
@@ -602,7 +602,7 @@ export class HarmoniesGame extends Harmonies {
             type: "personalBoard",
             position: {
               player: context.playerId,
-              place: {
+              hex: {
                 coords,
                 stackPosition: stack.length,
               },
@@ -1165,7 +1165,7 @@ export class HarmoniesGame extends Harmonies {
           type: "personalBoard",
           position: {
             player: context.playerId,
-            place: {
+            hex: {
               coords: placement.coords,
               stackPosition: placement.stackPosition,
             },
@@ -1306,8 +1306,8 @@ export class HarmoniesGame extends Harmonies {
           break;
         case "personalBoard":
           players[token.position.player].board[
-            token.position.place.coords
-          ].tokens[token.position.place.stackPosition] = token;
+            token.position.hex.coords
+          ].tokens[token.position.hex.stackPosition] = token;
           break;
         default:
           token satisfies never;

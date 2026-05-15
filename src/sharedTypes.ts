@@ -42,7 +42,7 @@ export type TokenType =
       type: "personalBoard";
       position: {
         player: string;
-        place: { coords: string; stackPosition: number };
+        hex: { coords: string; stackPosition: number };
       };
     });
 
