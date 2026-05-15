@@ -7,6 +7,8 @@ Shared language for the Harmonies digital implementation. This is a glossary, no
 ### Hex
 A single addressable cell on a **Personal Board**. A Hex holds a **Stack** of **Tokens** and optionally a **Cube**. Use "place a token on a hex" as the verb form. Use *Slot* (not Hex) for positions in the taken-token tray.
 
+In code, the geometric/coordinate side of a Hex is honeycomb-grid's `Hex` class; the *state at* a hex (its tokens and cube) is the `HexState` interface in `sharedTypes.ts`.
+
 ### Slot
 A fixed position (0, 1, or 2) in a player's three-token **Taken Tokens** tray — the holding area for tokens drawn from the **Central Board** before they are placed onto the **Personal Board**.
 
@@ -96,17 +98,3 @@ On a **Side B** **Personal Board**, a maximal contiguous region of non-blue **He
 ### Undo
 Reverts a single prior action within the current **Turn** (e.g. one token placement, one card take), not the whole Turn. Multiple Undos walk back the Turn one action at a time. Actions from earlier Turns are not undoable.
 
-## Code rename targets
-
-Code uses pre-glossary names in several places. To bring code in line with this glossary:
-
-- `Place` interface (`src/sharedTypes.ts`) → `Hex`
-- `TokenType` `personalBoard` variant `position.place` → `position.hex` (the `{ coords, stackPosition }` sub-object)
-- `TokenType` `taken` variant `position.place: number` → `position.slot: number`
-- `TokenType` `centralBoard` variant `position.spaceIndex` → `position.zone`; the inner `slotIndex` has no domain name — rename to a neutral implementation term (e.g. `index`) to free **Slot** for the Taken Tokens tray only.
-- `spaceIndex` / `spaceIndexToReplenish` variables in `worker/index.ts` → `zone` / `zonesToReplenish`
-- `AnimalCardType` `personalBoard` variant → `held`
-- `PatternCell.topToken: { color, index }` → `HabitatRequirement { topColor, stackHeight }` (and rename the array `pattern` stays as **Habitat Pattern** in domain wording)
-- `animalCardSpread` field name is fine (matches **Animal Spread**).
-- `PlayerGameState.animalCards` (4-slot tuple) → `playerCards` (since the row is shared with Spirit Cards).
-- `personalBoardSide` is fine (matches **Side**).
