@@ -32,7 +32,7 @@ export type TokenType =
     })
   | (BaseToken & {
       type: "centralBoard";
-      position: { spaceIndex: number; slotIndex: number };
+      position: { zone: number; index: number };
     })
   | (BaseToken & {
       type: "taken";

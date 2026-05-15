@@ -337,13 +337,13 @@ export class HarmoniesGame extends Harmonies {
 
     const tokens = shuffle([...allTokens]).map((color, index) => {
       if (index < 15) {
-        const spaceIndex = Math.floor(index / 3);
-        const slotIndex = index % 3;
+        const zone = Math.floor(index / 3);
+        const indexInZone = index % 3;
         const token: TokenType = {
           id: `token-${crypto.randomUUID()}`,
           color,
           type: "centralBoard",
-          position: { spaceIndex, slotIndex },
+          position: { zone, index: indexInZone },
         };
         return token;
       } else {
@@ -433,13 +433,13 @@ export class HarmoniesGame extends Harmonies {
     const hasTokens = privateGameState.tokens.some(
       (token) =>
         token.type === "centralBoard" &&
-        token.position.spaceIndex === context.action.payload,
+        token.position.zone === context.action.payload,
     );
 
     if (!hasTokens) {
       return {
         ok: false,
-        message: "No tokens in that space",
+        message: "No tokens in that zone",
       };
     }
 
@@ -451,13 +451,13 @@ export class HarmoniesGame extends Harmonies {
       return context.gameState;
     }
 
-    const spaceIndex = context.action.payload;
+    const zone = context.action.payload;
     let slotIndex = 0;
 
     const tokens = context.gameState.privateGameState.tokens.map((token) => {
       if (
         token.type === "centralBoard" &&
-        token.position.spaceIndex === spaceIndex
+        token.position.zone === zone
       ) {
         const newToken: TokenType = {
           id: token.id,
@@ -972,21 +972,20 @@ export class HarmoniesGame extends Harmonies {
         (index + 1) % privateGameState.playerIdList.length
       ];
 
-    // Find the space that needs replenishing (the empty space)
-    const spaceIndexToReplenish = [0, 1, 2, 3, 4].filter((spaceIndex) =>
+    // Find the zone that needs replenishing (the empty zone)
+    const zonesToReplenish = [0, 1, 2, 3, 4].filter((zone) =>
       privateGameState.tokens.every((token) => {
-        const spaceHasTokens =
-          token.type === "centralBoard" &&
-          token.position.spaceIndex === spaceIndex;
-        return !spaceHasTokens;
+        const zoneHasTokens =
+          token.type === "centralBoard" && token.position.zone === zone;
+        return !zoneHasTokens;
       }),
     );
 
-    if (spaceIndexToReplenish.length !== 1) {
+    if (zonesToReplenish.length !== 1) {
       throw new Error("Invalid central board state");
     }
 
-    // Move 3 tokens from supply to the empty space
+    // Move 3 tokens from supply to the empty zone
     let tokensToAllocate = 3;
     const tokens = privateGameState.tokens.map((token) => {
       if (tokensToAllocate > 0 && token.type === "supply") {
@@ -994,8 +993,8 @@ export class HarmoniesGame extends Harmonies {
           ...token,
           type: "centralBoard",
           position: {
-            spaceIndex: spaceIndexToReplenish[0],
-            slotIndex: 3 - tokensToAllocate,
+            zone: zonesToReplenish[0],
+            index: 3 - tokensToAllocate,
           },
         };
         tokensToAllocate--;
@@ -1299,8 +1298,7 @@ export class HarmoniesGame extends Harmonies {
         case "supply":
           break;
         case "centralBoard":
-          centralBoard[token.position.spaceIndex][token.position.slotIndex] =
-            token;
+          centralBoard[token.position.zone][token.position.index] = token;
           break;
         case "taken":
           players[token.position.player].takenTokens[token.position.slot] =
