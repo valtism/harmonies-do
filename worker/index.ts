@@ -870,9 +870,56 @@ export class HarmoniesGame extends Harmonies {
       return cube;
     });
 
+    // Check if this was the last cube on the card
+    const remainingCubes = animalCubes.filter(
+      (cube) => cube.type === "card" && cube.position.cardId === animalCardId,
+    );
+
+    let animalCards = privateGameState.animalCards;
+
+    if (remainingCubes.length === 0) {
+      // All cubes placed - move card to completed and shift remaining cards
+      const completedCard = privateGameState.animalCards.find(
+        (card) =>
+          card.id === animalCardId &&
+          card.type === "personalBoard" &&
+          card.position.playerId === context.playerId,
+      );
+
+      if (completedCard && completedCard.type === "personalBoard") {
+        const completedIndex = completedCard.position.index;
+
+        animalCards = privateGameState.animalCards.map((card) => {
+          if (card.id === animalCardId) {
+            return {
+              ...card,
+              type: "completed" as const,
+              position: { playerId: context.playerId },
+            };
+          }
+          // Shift cards with higher index down by 1
+          if (
+            card.type === "personalBoard" &&
+            card.position.playerId === context.playerId &&
+            card.position.index > completedIndex
+          ) {
+            return {
+              ...card,
+              position: {
+                ...card.position,
+                index: card.position.index - 1,
+              },
+            };
+          }
+          return card;
+        });
+      }
+    }
+
     const nextPrivateGameState: ImmutablePrivateGameState = {
       ...privateGameState,
       animalCubes,
+      animalCards,
     };
 
     return this.pushHistory(

@@ -2,6 +2,7 @@ import clsx from "clsx";
 import { defineHex, Grid, Orientation } from "honeycomb-grid";
 import { startTransition, useEffect, useRef, useState } from "react";
 import BoardSideA from "../assets/boardSideA.webp";
+import { animalCardImages } from "../constants/animalCardImages";
 import { AnimalCard } from "../components/AnimalCard";
 import { PlacingToken } from "../components/PlacingToken";
 import { Token } from "../components/Token";
@@ -263,6 +264,45 @@ export function PersonalBoard({
           })}
         </div>
         <PlacingToken token={placingToken} />
+      </div>
+
+      <div className="mt-4">
+        <div className="mb-1 text-sm font-semibold text-stone-400">
+          Completed
+        </div>
+        <div className="flex gap-2">
+          {player.completedAnimalCards.map((card) => (
+            <div
+              key={card.id}
+              className="flex-1"
+              style={{ aspectRatio: "140/240" }}
+            >
+              <img
+                src={animalCardImages[card.id]}
+                alt={card.id}
+                className="size-full rounded-lg"
+              />
+            </div>
+          ))}
+          {player.completedAnimalCards.length === 0 && (
+            <div
+              className="flex-1 rounded-lg border border-dotted border-stone-600"
+              style={{ aspectRatio: "140/240" }}
+            />
+          )}
+        </div>
+      </div>
+
+      <div className="mt-4">
+        <div className="mb-1 text-sm font-semibold text-stone-400">
+          Spirit Cards
+        </div>
+        <div className="flex gap-2">
+          <div
+            className="flex-1 rounded-lg border border-dotted border-stone-600"
+            style={{ aspectRatio: "140/240" }}
+          />
+        </div>
       </div>
     </div>
   );

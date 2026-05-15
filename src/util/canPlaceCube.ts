@@ -27,8 +27,7 @@ export function canPlaceCube(
 
   const matches = traversers.map((traverser) => {
     const trav = grid.traverse(traverser, { bail: false }).toArray();
-    // TODO: Make me dynamic
-    // if (trav.length !== 4) return false;
+    if (trav.length !== animalCard.pattern.length) return false;
 
     return trav.reduce((isMatch, hex, index) => {
       const place = personalBoard[`(${hex.q},${hex.r})`];
