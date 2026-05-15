@@ -4,7 +4,7 @@ import type { DerivedPublicGameState } from "../sharedTypes";
 import { Cube } from "./Cube";
 
 interface AnimalCardProps extends React.ComponentProps<"img"> {
-  card: DerivedPublicGameState["players"][number]["animalCards"][number];
+  card: DerivedPublicGameState["players"][number]["playerCards"][number];
 }
 export function AnimalCard({ card, ...props }: AnimalCardProps) {
   if (!card) return null;

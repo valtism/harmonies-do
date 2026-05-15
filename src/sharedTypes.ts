@@ -117,7 +117,7 @@ export interface PlayerGameState {
   id: string;
   name: string;
   takenTokens: [TokenType | null, TokenType | null, TokenType | null];
-  animalCards: [
+  playerCards: [
     DerivedAnimalCardType | null,
     DerivedAnimalCardType | null,
     DerivedAnimalCardType | null,

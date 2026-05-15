@@ -113,7 +113,7 @@ export function PersonalBoard({
         </div>
       )}
       <div className="my-2 flex gap-2">
-        {player.animalCards.map((card, index) => (
+        {player.playerCards.map((card, index) => (
           <div
             key={card?.id || index}
             className="flex-1"
@@ -152,7 +152,7 @@ export function PersonalBoard({
             const isTokenPlacable = tokenPlacable(placingToken, tokens);
 
             const hasMatch = canPlaceCube(
-              player.animalCards.find(
+              player.playerCards.find(
                 (card) => card?.id === selectedAnimalCardId,
               ),
               grid,

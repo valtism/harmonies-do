@@ -823,7 +823,7 @@ export class HarmoniesGame extends Harmonies {
     const publicState = this.derivePublicGameState();
     const personalBoard = publicState.players[context.playerId].board;
     const derivedAnimalCards =
-      publicState.players[context.playerId].animalCards;
+      publicState.players[context.playerId].playerCards;
     const derivedAnimalCard = derivedAnimalCards.find(
       (c) => c?.id === animalCardId,
     );
@@ -1271,7 +1271,7 @@ export class HarmoniesGame extends Harmonies {
         id: playerId,
         name: this.gameState.players.get(playerId)!.name,
         takenTokens: [null, null, null],
-        animalCards: [null, null, null, null],
+        playerCards: [null, null, null, null],
         completedAnimalCards: [],
         board: grid.reduce<DerivedPublicGameState["players"][string]["board"]>(
           (board, [q, r]) => {
@@ -1335,7 +1335,7 @@ export class HarmoniesGame extends Harmonies {
           animalCardSpread[animalCard.position.index] = animalCard;
           break;
         case "held":
-          players[animalCard.position.playerId].animalCards[
+          players[animalCard.position.playerId].playerCards[
             animalCard.position.index
           ] = {
             ...animalCard,
