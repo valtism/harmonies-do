@@ -1,3 +1,7 @@
+const randomName =
+  ["Happy", "Brave", "Swift", "Clever", "Calm"][Math.floor(Math.random() * 5)] +
+  ["Fox", "Bear", "Wolf", "Hawk", "Owl"][Math.floor(Math.random() * 5)];
+
 interface NameSelectProps extends React.ComponentProps<"button"> {
   onNameChange: (name: string) => void;
 }
@@ -14,18 +18,7 @@ export function NameSelect({ onNameChange, ...props }: NameSelectProps) {
     >
       <label>
         Name:
-        <input
-          type="text"
-          name="name"
-          defaultValue={
-            ["Happy", "Brave", "Swift", "Clever", "Calm"][
-              Math.floor(Math.random() * 5)
-            ] +
-            ["Fox", "Bear", "Wolf", "Hawk", "Owl"][
-              Math.floor(Math.random() * 5)
-            ]
-          }
-        />
+        <input type="text" name="name" defaultValue={randomName} />
       </label>
       <button type="submit" {...props}>
         Submit

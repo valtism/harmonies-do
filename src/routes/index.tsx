@@ -5,10 +5,10 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-function Index() {
-  // 6 character hex code
-  const randomRoomId = Math.floor(Math.random() * 16777215).toString(16);
+// 6 character hex code
+const randomRoomId = Math.floor(Math.random() * 16777215).toString(16);
 
+function Index() {
   const [name, setName] = useState(randomRoomId);
 
   return (

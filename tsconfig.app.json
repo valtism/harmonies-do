@@ -23,7 +23,7 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
 
-    "types": ["react/canary"]
+    "types": ["react/canary", "@types/bun"],
   },
-  "include": ["src"]
+  "include": ["src"],
 }
