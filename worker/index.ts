@@ -18,6 +18,7 @@ import {
 } from "../src/sharedTypes";
 import { canPlaceCube } from "../src/util/canPlaceCube";
 import { calculatePlayerScore } from "../src/util/scoring";
+import { simulateEndBoardState } from "../src/util/simulateEndBoardState";
 import { tokenPlacable } from "../src/util/tokenPlaceable";
 
 export interface Env {
@@ -1106,80 +1107,13 @@ export class HarmoniesGame extends Harmonies {
     }
 
     const { privateGameState } = context.gameState;
-    const gridCoords = grids[privateGameState.personalBoardSide];
-
-    // Get all supply tokens for placing and shuffle them
-    const availableTokens = shuffle(
-      privateGameState.tokens.filter((token) => token.type === "supply"),
-    );
-
-    // Keep track of tokens we'll modify
-    const tokensToPlace: {
-      token: TokenType;
-      coords: string;
-      stackPosition: number;
-    }[] = [];
-
-    // Track which tokens have been used
-    const usedTokenIds = new Set<string>();
-
-    // Process each hex on the grid
-    for (const [q, r] of gridCoords) {
-      const coords = `(${q},${r})`;
-
-      // Decide randomly how many tokens to try to stack (0-3)
-      // Weight toward lower stacks and include 0 to leave some hexes empty
-      const maxStackHeight = weightedRandomHeight();
-
-      // Build up the stack, validating each token placement
-      const currentStack: TokenType[] = [];
-
-      for (let stackPos = 0; stackPos < maxStackHeight; stackPos++) {
-        // Find a token that can be placed on the current stack
-        const placeableToken = availableTokens.find(
-          (token) =>
-            !usedTokenIds.has(token.id) && tokenPlacable(token, currentStack),
-        );
-
-        if (!placeableToken) {
-          // No more compatible tokens available for this stack position
-          break;
-        }
-
-        usedTokenIds.add(placeableToken.id);
-        tokensToPlace.push({
-          token: placeableToken,
-          coords,
-          stackPosition: stackPos,
-        });
-        currentStack.push(placeableToken);
-      }
-    }
-
-    // Create new tokens array with placements
-    const tokens = privateGameState.tokens.map((token) => {
-      const placement = tokensToPlace.find((p) => p.token.id === token.id);
-      if (placement) {
-        const newToken: TokenType = {
-          ...token,
-          type: "personalBoard",
-          position: {
-            player: context.playerId,
-            hex: {
-              coords: placement.coords,
-              stackPosition: placement.stackPosition,
-            },
-          },
-        };
-        return newToken;
-      }
-      return token;
+    const nextPrivateGameState = simulateEndBoardState({
+      privateGameState,
+      playerId: context.playerId,
+      gridCoords: grids[privateGameState.personalBoardSide],
+      randomHeight: weightedRandomHeight,
+      shuffleTokens: shuffle,
     });
-
-    const nextPrivateGameState: ImmutablePrivateGameState = {
-      ...privateGameState,
-      tokens,
-    };
 
     return this.pushHistory(
       context.gameState,
