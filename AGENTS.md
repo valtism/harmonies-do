@@ -32,3 +32,17 @@
 
 - Durable Object manages WebSocket sessions and game state.
 - Action handlers use `validate` and `apply` steps with a typed context.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in GitHub Issues for `valtism/harmonies-do` using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the default triage label vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a single-context repo: read root `CONTEXT.md` and relevant ADRs under `docs/adr/` when present. See `docs/agents/domain.md`.
