@@ -46,6 +46,16 @@ export function Game({ gameState, sendAction, playerId }: GameProps) {
       >
         🐛 Simulate End Board
       </button>
+      <button
+        className="rounded bg-amber-600 px-2 py-1 text-white hover:bg-amber-700"
+        onClick={() => {
+          sendAction({
+            type: "resetGame",
+          });
+        }}
+      >
+        🐛 Reset
+      </button>
       <CentralBoard
         state={gameState.centralBoard}
         onClick={(spaceIndex) => {

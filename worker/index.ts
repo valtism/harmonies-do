@@ -213,6 +213,10 @@ export class HarmoniesGame extends Harmonies {
         validate: (context) => this.validateSimulateEndBoardState(context),
         apply: (context) => this.applySimulateEndBoardState(context),
       },
+      resetGame: {
+        validate: (context) => this.validateResetGame(context),
+        apply: (context) => this.applyResetGame(context),
+      },
     };
   }
 
@@ -1120,6 +1124,28 @@ export class HarmoniesGame extends Harmonies {
       context.action,
       nextPrivateGameState,
     );
+  }
+
+  validateResetGame(context: ActionContext<"resetGame">): CanPerformAction {
+    if (context.gameState.type !== "active") {
+      return { ok: false, message: "Game is not active" };
+    }
+
+    return { ok: true };
+  }
+
+  applyResetGame(context: ActionContext<"resetGame">): GameState {
+    if (context.gameState.type !== "active") {
+      return context.gameState;
+    }
+
+    return {
+      ...context.gameState,
+      privateGameState:
+        context.gameState.history[0]?.gameState ??
+        context.gameState.privateGameState,
+      history: [],
+    };
   }
 
   pushHistory(

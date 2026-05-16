@@ -214,6 +214,9 @@ const actionSchemas = {
   simulateEndBoardState: z.object({
     type: z.literal("simulateEndBoardState"),
   }),
+  resetGame: z.object({
+    type: z.literal("resetGame"),
+  }),
 };
 
 export type ActionKeys = keyof typeof actionSchemas;
