@@ -16,11 +16,15 @@ import {
   type PrivateGameState,
   type TokenType,
 } from "../src/sharedTypes";
-import { createPersonalBoardView } from "../src/domain/personalBoard";
+import {
+  coordsToString,
+  createPersonalBoardView,
+  placeCubeOnPersonalBoard,
+  placeTokenOnPersonalBoard,
+} from "../src/domain/personalBoard";
 import { canPlaceCube } from "../src/util/canPlaceCube";
 import { calculatePlayerScore } from "../src/util/scoring";
 import { simulateEndBoardState } from "../src/util/simulateEndBoardState";
-import { tokenPlacable } from "../src/util/tokenPlaceable";
 
 export interface Env {
   HARMONIES: DurableObjectNamespace<HarmoniesGame>;
@@ -503,20 +507,6 @@ export class HarmoniesGame extends Harmonies {
     }
 
     const { tokenId, coords } = context.action.payload;
-    const placingToken = privateGameState.tokens.find(
-      (token) => token.id === tokenId,
-    );
-
-    if (!placingToken) {
-      return { ok: false, message: "No token found" };
-    }
-
-    if (
-      placingToken.type !== "taken" ||
-      placingToken.position.player !== context.playerId
-    ) {
-      return { ok: false, message: "Invalid token" };
-    }
 
     const hasTakenTokens = privateGameState.tokens.some(
       (token) =>
@@ -527,30 +517,16 @@ export class HarmoniesGame extends Harmonies {
       return { ok: false, message: "No taken tokens" };
     }
 
-    const board = createPersonalBoardView({
+    const result = placeTokenOnPersonalBoard({
       privateGameState,
       playerId: context.playerId,
       grid,
+      tokenId,
+      coords,
     });
 
-    if (!board.hasHex(coords)) {
-      return { ok: false, message: "Invalid board location" };
-    }
-
-    if (board.cubeAt(coords)) {
-      return { ok: false, message: "Cannot place token on a hex with a cube" };
-    }
-
-    const stack = board.stackAt(coords);
-
-    // Check max stack height (3 tokens)
-    if (stack.length >= 3) {
-      return { ok: false, message: "Stack cannot exceed 3 tokens" };
-    }
-
-    const canPlace = tokenPlacable(placingToken, stack);
-    if (!canPlace) {
-      return { ok: false, message: "Cannot place token" };
+    if (!result.ok) {
+      return { ok: false, message: result.message };
     }
 
     return { ok: true };
@@ -561,52 +537,22 @@ export class HarmoniesGame extends Harmonies {
       return context.gameState;
     }
 
-    const { tokenId, coords } = context.action.payload;
-    const { privateGameState } = context.gameState;
-    const placingToken = privateGameState.tokens.find(
-      (token) => token.id === tokenId,
-    );
-
-    if (!placingToken) {
-      return context.gameState;
-    }
-
-    const board = createPersonalBoardView({
-      privateGameState,
+    const result = placeTokenOnPersonalBoard({
+      privateGameState: context.gameState.privateGameState,
       playerId: context.playerId,
       grid: context.gameState.grid,
+      tokenId: context.action.payload.tokenId,
+      coords: context.action.payload.coords,
     });
-    const stack = board.stackAt(coords);
 
-    const tokens: PrivateGameState["tokens"] = privateGameState.tokens.map(
-      (token) => {
-        if (token.id === tokenId) {
-          const newToken: TokenType = {
-            ...placingToken,
-            type: "personalBoard",
-            position: {
-              player: context.playerId,
-              hex: {
-                coords,
-                stackPosition: stack.length,
-              },
-            },
-          };
-          return newToken;
-        }
-        return token;
-      },
-    );
-
-    const nextPrivateGameState: ImmutablePrivateGameState = {
-      ...privateGameState,
-      tokens,
-    };
+    if (!result.ok) {
+      return context.gameState;
+    }
 
     return this.pushHistory(
       context.gameState,
       context.action,
-      nextPrivateGameState,
+      result.value,
     );
   }
 
@@ -785,21 +731,18 @@ export class HarmoniesGame extends Harmonies {
       return { ok: false, message: "No cubes remaining on this animal card" };
     }
 
-    // Check if hex is on the board
-    const hexExists = grid
-      .toArray()
-      .some((h) => h.q === hex.q && h.r === hex.r);
-    if (!hexExists) {
+    const coords = coordsToString(hex);
+    const board = createPersonalBoardView({
+      privateGameState,
+      playerId: context.playerId,
+      grid,
+    });
+
+    if (!board.hasHex(coords)) {
       return { ok: false, message: "Invalid hex coordinates" };
     }
 
-    // Check if hex already has a cube
-    const cubeOnHex = privateGameState.animalCubes.find(
-      (cube) =>
-        cube.type === "personalBoard" &&
-        cube.position.coords === `(${hex.q},${hex.r})`,
-    );
-    if (cubeOnHex) {
+    if (board.cubeAt(coords)) {
       return { ok: false, message: "This hex already has a cube" };
     }
 
@@ -843,16 +786,18 @@ export class HarmoniesGame extends Harmonies {
       return context.gameState;
     }
 
-    const animalCubes = privateGameState.animalCubes.map((cube) => {
-      if (cube.id === cubeToPlace.id) {
-        return {
-          id: cube.id,
-          type: "personalBoard" as const,
-          position: { coords: `(${hex.q},${hex.r})` },
-        };
-      }
-      return cube;
+    const placeCubeResult = placeCubeOnPersonalBoard({
+      privateGameState,
+      grid: context.gameState.grid,
+      cubeId: cubeToPlace.id,
+      coords: coordsToString(hex),
     });
+
+    if (!placeCubeResult.ok) {
+      return context.gameState;
+    }
+
+    const { animalCubes } = placeCubeResult.value;
 
     // Check if this was the last cube on the card
     const remainingCubes = animalCubes.filter(

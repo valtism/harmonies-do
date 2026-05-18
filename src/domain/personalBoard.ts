@@ -3,8 +3,10 @@ import type {
   ColorType,
   HexState,
   ImmutablePrivateGameState,
+  PrivateGameState,
   TokenType,
 } from "../sharedTypes";
+import { tokenPlacable } from "../util/tokenPlaceable";
 
 type GridCoords = readonly (readonly [number, number])[];
 
@@ -34,6 +36,25 @@ type CreatePersonalBoardViewInput = {
   privateGameState: ImmutablePrivateGameState;
   playerId: string;
   grid: Grid<Hex> | GridCoords;
+};
+
+type PersonalBoardResult<T> =
+  | { ok: true; value: T }
+  | { ok: false; message: string };
+
+type PlaceTokenOnPersonalBoardInput = {
+  privateGameState: ImmutablePrivateGameState;
+  playerId: string;
+  grid: Grid<Hex> | GridCoords;
+  tokenId: string;
+  coords: BoardCoords;
+};
+
+type PlaceCubeOnPersonalBoardInput = {
+  privateGameState: ImmutablePrivateGameState;
+  grid: Grid<Hex> | GridCoords;
+  cubeId: string;
+  coords: BoardCoords;
 };
 
 export function createPersonalBoardView({
@@ -70,6 +91,128 @@ export function createPersonalBoardView({
           topColor: tokens.at(-1)?.color ?? null,
         };
       }),
+  };
+}
+
+export function placeTokenOnPersonalBoard({
+  privateGameState,
+  playerId,
+  grid,
+  tokenId,
+  coords,
+}: PlaceTokenOnPersonalBoardInput): PersonalBoardResult<ImmutablePrivateGameState> {
+  const tokenToPlace = privateGameState.tokens.find(
+    (token) => token.id === tokenId,
+  );
+
+  if (!tokenToPlace) {
+    return { ok: false, message: "No token found" };
+  }
+
+  if (tokenToPlace.type !== "taken" || tokenToPlace.position.player !== playerId) {
+    return { ok: false, message: "Invalid token" };
+  }
+
+  const board = createPersonalBoardView({
+    privateGameState,
+    playerId,
+    grid,
+  });
+
+  if (!board.hasHex(coords)) {
+    return { ok: false, message: "Invalid board location" };
+  }
+
+  if (board.cubeAt(coords)) {
+    return { ok: false, message: "Cannot place token on a hex with a cube" };
+  }
+
+  const stack = board.stackAt(coords);
+
+  if (stack.length >= 3) {
+    return { ok: false, message: "Stack cannot exceed 3 tokens" };
+  }
+
+  if (!tokenPlacable(tokenToPlace, stack)) {
+    return { ok: false, message: "Cannot place token" };
+  }
+
+  const tokens: PrivateGameState["tokens"] = privateGameState.tokens.map(
+    (token) => {
+      if (token.id !== tokenId) return token;
+
+      return {
+        ...tokenToPlace,
+        type: "personalBoard",
+        position: {
+          player: playerId,
+          hex: {
+            coords,
+            stackPosition: stack.length,
+          },
+        },
+      };
+    },
+  );
+
+  return {
+    ok: true,
+    value: {
+      ...privateGameState,
+      tokens,
+    },
+  };
+}
+
+export function placeCubeOnPersonalBoard({
+  privateGameState,
+  grid,
+  cubeId,
+  coords,
+}: PlaceCubeOnPersonalBoardInput): PersonalBoardResult<ImmutablePrivateGameState> {
+  const cubeToPlace = privateGameState.animalCubes.find(
+    (cube) => cube.id === cubeId,
+  );
+
+  if (!cubeToPlace) {
+    return { ok: false, message: "No cube found" };
+  }
+
+  if (cubeToPlace.type !== "card") {
+    return { ok: false, message: "Invalid cube" };
+  }
+
+  const board = createPersonalBoardView({
+    privateGameState,
+    playerId: "",
+    grid,
+  });
+
+  if (!board.hasHex(coords)) {
+    return { ok: false, message: "Invalid hex coordinates" };
+  }
+
+  if (board.cubeAt(coords)) {
+    return { ok: false, message: "This hex already has a cube" };
+  }
+
+  const animalCubes: PrivateGameState["animalCubes"] =
+    privateGameState.animalCubes.map((cube) => {
+      if (cube.id !== cubeId) return cube;
+
+      return {
+        id: cube.id,
+        type: "personalBoard",
+        position: { coords },
+      };
+    });
+
+  return {
+    ok: true,
+    value: {
+      ...privateGameState,
+      animalCubes,
+    },
   };
 }
 
