@@ -87,3 +87,7 @@ Based on the official game rules from https://officialgamerules.org/game-rules/h
 - [ ] Chat functionality
 - [ ] Game history/replay
 - [ ] Spectator mode
+
+## Architecture Improvments
+
+- [ ] Remove stack.topColor, seems like state duplication
