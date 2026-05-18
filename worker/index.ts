@@ -16,6 +16,7 @@ import {
   type PrivateGameState,
   type TokenType,
 } from "../src/sharedTypes";
+import { createPersonalBoardView } from "../src/domain/personalBoard";
 import { canPlaceCube } from "../src/util/canPlaceCube";
 import { calculatePlayerScore } from "../src/util/scoring";
 import { simulateEndBoardState } from "../src/util/simulateEndBoardState";
@@ -526,36 +527,21 @@ export class HarmoniesGame extends Harmonies {
       return { ok: false, message: "No taken tokens" };
     }
 
-    const isValidCoords = grid
-      .toArray()
-      .some((hex) => hex.toString() === coords);
-    if (!isValidCoords) {
+    const board = createPersonalBoardView({
+      privateGameState,
+      playerId: context.playerId,
+      grid,
+    });
+
+    if (!board.hasHex(coords)) {
       return { ok: false, message: "Invalid board location" };
     }
 
-    // Check if there's an animal cube on this hex
-    const hasAnimalCube = privateGameState.animalCubes.some(
-      (cube) =>
-        cube.type === "personalBoard" &&
-        cube.position.coords === coords,
-    );
-    if (hasAnimalCube) {
-      return { ok: false, message: "Cannot place token on a hex with an animal cube" };
+    if (board.cubeAt(coords)) {
+      return { ok: false, message: "Cannot place token on a hex with a cube" };
     }
 
-    // Build stack array properly (handle gaps by filtering)
-    const existingTokens: TokenType[] = [];
-    privateGameState.tokens.forEach((token) => {
-      if (
-        token.type === "personalBoard" &&
-        token.position.player === context.playerId &&
-        token.position.hex.coords === coords
-      ) {
-        existingTokens[token.position.hex.stackPosition] = token;
-      }
-    });
-    // Filter out any undefined entries (gaps) and rebuild sequential stack
-    const stack = existingTokens.filter((t): t is TokenType => t !== undefined);
+    const stack = board.stackAt(coords);
 
     // Check max stack height (3 tokens)
     if (stack.length >= 3) {
@@ -585,19 +571,12 @@ export class HarmoniesGame extends Harmonies {
       return context.gameState;
     }
 
-    // Build stack array properly (handle gaps by filtering)
-    const existingTokens: TokenType[] = [];
-    privateGameState.tokens.forEach((token) => {
-      if (
-        token.type === "personalBoard" &&
-        token.position.player === context.playerId &&
-        token.position.hex.coords === coords
-      ) {
-        existingTokens[token.position.hex.stackPosition] = token;
-      }
+    const board = createPersonalBoardView({
+      privateGameState,
+      playerId: context.playerId,
+      grid: context.gameState.grid,
     });
-    // Filter out any undefined entries (gaps) and rebuild sequential stack
-    const stack = existingTokens.filter((t): t is TokenType => t !== undefined);
+    const stack = board.stackAt(coords);
 
     const tokens: PrivateGameState["tokens"] = privateGameState.tokens.map(
       (token) => {

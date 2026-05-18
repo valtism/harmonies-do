@@ -1,4 +1,5 @@
 import type { ImmutablePrivateGameState, TokenType } from "../sharedTypes";
+import { createPersonalBoardView } from "../domain/personalBoard";
 import { tokenPlacable } from "./tokenPlaceable";
 
 export function simulateEndBoardState({
@@ -25,31 +26,21 @@ export function simulateEndBoardState({
   }[] = [];
 
   const usedTokenIds = new Set<string>();
+  const board = createPersonalBoardView({
+    privateGameState,
+    playerId,
+    grid: gridCoords,
+  });
 
   for (const [q, r] of gridCoords) {
     const coords = `(${q},${r})`;
     const maxStackHeight = randomHeight();
-    const hasAnimalCube = privateGameState.animalCubes.some(
-      (cube) => cube.type === "personalBoard" && cube.position.coords === coords,
-    );
 
-    if (hasAnimalCube) {
+    if (board.cubeAt(coords)) {
       continue;
     }
 
-    const existingTokens: TokenType[] = [];
-    privateGameState.tokens.forEach((token) => {
-      if (
-        token.type === "personalBoard" &&
-        token.position.player === playerId &&
-        token.position.hex.coords === coords
-      ) {
-        existingTokens[token.position.hex.stackPosition] = token as TokenType;
-      }
-    });
-    const currentStack = existingTokens.filter(
-      (token): token is TokenType => token !== undefined,
-    );
+    const currentStack = [...board.stackAt(coords)];
 
     while (currentStack.length < maxStackHeight && currentStack.length < 3) {
       const placeableToken = availableTokens.find(
