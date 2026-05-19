@@ -12,6 +12,7 @@ import {
   type CanPerformAction,
   type DerivedPublicGameState,
   type GameState,
+  type History,
   type ImmutablePrivateGameState,
   type PrivateGameState,
   type TokenType,
@@ -22,6 +23,7 @@ import {
   placeCubeOnPersonalBoard,
   placeTokenOnPersonalBoard,
 } from "../src/domain/personalBoard";
+import { createTurnState } from "../src/domain/turn";
 import { canPlaceCube } from "../src/util/canPlaceCube";
 import { calculatePlayerScore } from "../src/util/scoring";
 import { simulateEndBoardState } from "../src/util/simulateEndBoardState";
@@ -46,11 +48,6 @@ type ActionHandlers = {
 type StoredConnection = {
   id: string;
   playerId?: string;
-};
-
-type HistoryEntry = {
-  action: ActionType & { canUndo: boolean };
-  gameState: ImmutablePrivateGameState;
 };
 
 // Worker
@@ -429,11 +426,13 @@ export class HarmoniesGame extends Harmonies {
       return { ok: false, message: "Not your turn" };
     }
 
-    const hasTakenTokens = this.findInTurnHistory(
-      (entry) => entry.action.type === "takeTokens",
-    );
+    const turn = createTurnState({
+      history: context.gameState.history,
+      privateGameState,
+      playerId: context.playerId,
+    });
 
-    if (hasTakenTokens) {
+    if (turn.hasTakenTokens) {
       return {
         ok: false,
         message: "Already taken tokens",
@@ -601,11 +600,13 @@ export class HarmoniesGame extends Harmonies {
       return { ok: false, message: "No card at that index" };
     }
 
-    const hasTakenAnimalCard = this.findInTurnHistory(
-      (entry) => entry.action.type === "takeAnimalCard",
-    );
+    const turn = createTurnState({
+      history: context.gameState.history,
+      privateGameState,
+      playerId: context.playerId,
+    });
 
-    if (hasTakenAnimalCard) {
+    if (turn.hasTakenAnimalCard) {
       return {
         ok: false,
         message: "Already taken an animal card this turn",
@@ -869,18 +870,13 @@ export class HarmoniesGame extends Harmonies {
       return { ok: false, message: "Not your turn" };
     }
 
-    // Check if all taken tokens have been placed
-    const hasPlacedAllTokens = privateGameState.tokens.every(
-      (token) =>
-        !(token.type === "taken" && token.position.player === context.playerId),
-    );
+    const turn = createTurnState({
+      history: context.gameState.history,
+      privateGameState,
+      playerId: context.playerId,
+    });
 
-    // Check if the player has taken tokens this turn
-    const hasTakenTokens = this.findInTurnHistory(
-      (entry) => entry.action.type === "takeTokens",
-    );
-
-    if (!hasTakenTokens || !hasPlacedAllTokens) {
+    if (!turn.canEndTurn) {
       return { ok: false, message: "Unfinished turn" };
     }
 
@@ -982,14 +978,19 @@ export class HarmoniesGame extends Harmonies {
         message: "Game is not active",
       };
     }
+    const turn = createTurnState({
+      history: context.gameState.history,
+      privateGameState: context.gameState.privateGameState,
+      playerId: context.playerId,
+    });
+
     if (context.gameState.history.length === 0) {
       return {
         ok: false,
         message: "No actions to undo",
       };
     }
-    const lastEntry = context.gameState.history.at(-1);
-    if (!lastEntry?.action.canUndo) {
+    if (!turn.canUndo) {
       return {
         ok: false,
         message: "Cannot undo this action",
@@ -1077,7 +1078,7 @@ export class HarmoniesGame extends Harmonies {
     action: ActionType,
     privateGameState: ImmutablePrivateGameState,
   ): GameState {
-    const historyEntry: HistoryEntry = {
+    const historyEntry: History = {
       action: { ...action, canUndo: true },
       gameState: gameState.privateGameState,
     };
@@ -1087,28 +1088,6 @@ export class HarmoniesGame extends Harmonies {
       privateGameState,
       history: [...gameState.history, historyEntry],
     };
-  }
-
-  /**
-   * Search through history for the current turn.
-   * Iterates backwards through history until it finds an endTurn action.
-   * Returns true if the callback returns true for any entry.
-   */
-  findInTurnHistory(callback: (entry: HistoryEntry) => boolean): boolean {
-    if (!this.gameState.history) {
-      return false;
-    }
-
-    for (let i = this.gameState.history.length; i > 0; i--) {
-      const entry = this.gameState.history[i - 1];
-      if (entry.action.type === "endTurn") {
-        break;
-      }
-      if (callback(entry)) {
-        return true;
-      }
-    }
-    return false;
   }
 
   broadcastGameState() {
