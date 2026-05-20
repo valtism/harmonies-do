@@ -15,6 +15,8 @@ A fixed position (0, 1, or 2) in a player's three-token **Taken Tokens** tray â€
 ### Central Board
 The shared token market: 5 **Zones**, each holding 3 **Tokens**. Tokens are drawn from here into a player's **Taken Tokens** tray. Distinct from any *board* a player owns.
 
+During end-of-turn refill, exactly one Zone is expected to be empty. Zero or multiple empty Zones is an invariant failure, not a player-facing rule rejection.
+
 ### Zone
 One of the 5 sub-regions of the **Central Board**, each holding up to 3 **Tokens**. A player draws tokens by selecting a Zone, taking all tokens currently in it. The 3 positions within a Zone are not named in domain language.
 
@@ -66,7 +68,7 @@ One player's full sequence of actions, from the start of their go until they end
 One cycle in which every player takes one **Turn**. Used only to describe the end-game rule: once an end-game trigger fires, the current Round finishes so all players have taken an equal number of Turns.
 
 ### End Game
-The state entered when either end-game trigger fires (pouch empty and **Central Board** cannot refill, OR a player ends a Turn with 2 or fewer empty **Hexes**). The current **Round** completes, then **Final Scoring** runs.
+The state entered when either end-game trigger fires (pouch empty and **Central Board** cannot refill, OR a player ends a Turn with 2 or fewer empty **Hexes**). If the Central Board cannot fully refill, it still refills as many **Tokens** as the **Pouch** can provide before End Game is entered. The current **Round** completes, then **Final Scoring** runs.
 
 ### Final Scoring
 The end-of-game score calculation across all categories: trees, mountains, fields, buildings, water (rule depends on **Side**), and animals (held + completed). Produces each player's total.
@@ -97,4 +99,3 @@ On a **Side B** **Personal Board**, a maximal contiguous region of non-blue **He
 
 ### Undo
 Reverts a single prior action within the current **Turn** (e.g. one token placement, one card take), not the whole Turn. Multiple Undos walk back the Turn one action at a time. Actions from earlier Turns are not undoable.
-

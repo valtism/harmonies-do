@@ -23,6 +23,11 @@ import {
   placeCubeOnPersonalBoard,
   placeTokenOnPersonalBoard,
 } from "../src/domain/personalBoard";
+import {
+  refillCentralBoard,
+  takeZoneTokens,
+  zoneHasTokens,
+} from "../src/domain/centralBoard";
 import { createTurnState } from "../src/domain/turn";
 import { canPlaceCube } from "../src/util/canPlaceCube";
 import { calculatePlayerScore } from "../src/util/scoring";
@@ -439,11 +444,7 @@ export class HarmoniesGame extends Harmonies {
       };
     }
 
-    const hasTokens = privateGameState.tokens.some(
-      (token) =>
-        token.type === "centralBoard" &&
-        token.position.zone === context.action.payload,
-    );
+    const hasTokens = zoneHasTokens(privateGameState, context.action.payload);
 
     if (!hasTokens) {
       return {
@@ -460,30 +461,11 @@ export class HarmoniesGame extends Harmonies {
       return context.gameState;
     }
 
-    const zone = context.action.payload;
-    let slotIndex = 0;
-
-    const tokens = context.gameState.privateGameState.tokens.map((token) => {
-      if (
-        token.type === "centralBoard" &&
-        token.position.zone === zone
-      ) {
-        const newToken: TokenType = {
-          id: token.id,
-          color: token.color,
-          type: "taken",
-          position: { player: context.playerId, slot: slotIndex },
-        };
-        slotIndex += 1;
-        return newToken;
-      }
-      return token;
+    const nextPrivateGameState = takeZoneTokens({
+      privateGameState: context.gameState.privateGameState,
+      playerId: context.playerId,
+      zone: context.action.payload,
     });
-
-    const nextPrivateGameState: ImmutablePrivateGameState = {
-      ...context.gameState.privateGameState,
-      tokens,
-    };
 
     return this.pushHistory(
       context.gameState,
@@ -897,37 +879,7 @@ export class HarmoniesGame extends Harmonies {
         (index + 1) % privateGameState.playerIdList.length
       ];
 
-    // Find the zone that needs replenishing (the empty zone)
-    const zonesToReplenish = [0, 1, 2, 3, 4].filter((zone) =>
-      privateGameState.tokens.every((token) => {
-        const zoneHasTokens =
-          token.type === "centralBoard" && token.position.zone === zone;
-        return !zoneHasTokens;
-      }),
-    );
-
-    if (zonesToReplenish.length !== 1) {
-      throw new Error("Invalid central board state");
-    }
-
-    // Move 3 tokens from supply to the empty zone
-    let tokensToAllocate = 3;
-    const tokens = privateGameState.tokens.map((token) => {
-      if (tokensToAllocate > 0 && token.type === "supply") {
-        const newToken: TokenType = {
-          ...token,
-          type: "centralBoard",
-          position: {
-            zone: zonesToReplenish[0],
-            index: 3 - tokensToAllocate,
-          },
-        };
-        tokensToAllocate--;
-        return newToken;
-      } else {
-        return token;
-      }
-    });
+    const refill = refillCentralBoard(privateGameState);
 
     // Find empty slots in the animal card spread and replenish from deck
     const emptySpreadIndexes: number[] = [];
@@ -958,8 +910,7 @@ export class HarmoniesGame extends Harmonies {
     });
 
     const nextPrivateGameState: ImmutablePrivateGameState = {
-      ...privateGameState,
-      tokens,
+      ...refill.privateGameState,
       animalCards,
       currentPlayerId: nextPlayerId,
     };
