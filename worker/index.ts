@@ -35,7 +35,7 @@ import {
   zoneHasTokens,
 } from "../src/domain/centralBoard";
 import { createTurnState } from "../src/domain/turn";
-import { calculatePlayerScore } from "../src/util/scoring";
+import { calculateFinalScore } from "../src/domain/finalScoring";
 import { simulateEndBoardState } from "../src/util/simulateEndBoardState";
 
 export interface Env {
@@ -1042,12 +1042,16 @@ export class HarmoniesGame extends Harmonies {
         (sum, card) => sum + (card.scores[0] ?? 0),
         0,
       );
-      player.score = calculatePlayerScore(
-        player.board,
-        this.gameState.grid,
-        privateGameState.personalBoardSide,
-        completedCardPoints,
-      );
+      const personalBoard = createPersonalBoardView({
+        privateGameState,
+        playerId,
+        grid: this.gameState.grid,
+      });
+      player.score = calculateFinalScore({
+        personalBoard,
+        side: privateGameState.personalBoardSide,
+        animalPoints: completedCardPoints,
+      });
     }
 
     return {
