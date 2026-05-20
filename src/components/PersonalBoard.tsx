@@ -12,7 +12,7 @@ import type {
   DerivedPublicGameState,
   TokenType,
 } from "../sharedTypes";
-import { canPlaceCube } from "../util/canPlaceCube";
+import { canPlaceCube } from "../domain/playerCards";
 import { tokenPlacable } from "../util/tokenPlaceable";
 
 const debug = true;
@@ -151,14 +151,14 @@ export function PersonalBoard({
             const tokens = tile?.tokens || [];
             const isTokenPlacable = tokenPlacable(placingToken, tokens);
 
-            const hasMatch = canPlaceCube(
-              player.playerCards.find(
+            const hasMatch = canPlaceCube({
+              animalCard: player.playerCards.find(
                 (card) => card?.id === selectedAnimalCardId,
               ),
               grid,
               hex,
-              player.board,
-            );
+              personalBoard: player.board,
+            });
 
             return (
               <div

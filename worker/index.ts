@@ -20,16 +20,21 @@ import {
 import {
   coordsToString,
   createPersonalBoardView,
-  placeCubeOnPersonalBoard,
   placeTokenOnPersonalBoard,
 } from "../src/domain/personalBoard";
+import {
+  canPlaceCube,
+  getHighestIndexCubeOnCard,
+  placeCube,
+  replenishAnimalCardSpread,
+  takeAnimalCard,
+} from "../src/domain/playerCards";
 import {
   refillCentralBoard,
   takeZoneTokens,
   zoneHasTokens,
 } from "../src/domain/centralBoard";
 import { createTurnState } from "../src/domain/turn";
-import { canPlaceCube } from "../src/util/canPlaceCube";
 import { calculatePlayerScore } from "../src/util/scoring";
 import { simulateEndBoardState } from "../src/util/simulateEndBoardState";
 
@@ -603,76 +608,20 @@ export class HarmoniesGame extends Harmonies {
       return context.gameState;
     }
 
-    const { privateGameState } = context.gameState;
-    const takenIndexes = privateGameState.animalCards.reduce(
-      (takenIndexes, card) => {
-        if (
-          card.type === "held" &&
-          card.position.playerId === context.playerId
-        ) {
-          takenIndexes.push(card.position.index);
-        }
-        return takenIndexes;
-      },
-      [] as number[],
-    );
-
-    let personalBoardFreeIndex = 0;
-    for (let i = 0; i <= 3; i++) {
-      if (!takenIndexes.includes(i)) {
-        personalBoardFreeIndex = i;
-        break;
-      }
-    }
-
-    const animalCards = privateGameState.animalCards.map((card) => {
-      if (
-        card.type === "spread" &&
-        card.position.index === context.action.payload.index
-      ) {
-        return {
-          ...card,
-          type: "held" as const,
-          position: {
-            playerId: context.playerId,
-            index: personalBoardFreeIndex,
-          },
-        };
-      } else {
-        return card;
-      }
+    const result = takeAnimalCard({
+      privateGameState: context.gameState.privateGameState,
+      playerId: context.playerId,
+      spreadIndex: context.action.payload.index,
     });
 
-    const selectedCard = animalCards.find(
-      (card) =>
-        card.type === "held" &&
-        card.position.playerId === context.playerId &&
-        card.position.index === personalBoardFreeIndex,
-    );
-
-    if (!selectedCard) {
-      throw new Error("Selected card not found");
+    if (!result.ok) {
+      return context.gameState;
     }
-
-    let scoreIndex = selectedCard.scores.length - 1;
-    const animalCubes = privateGameState.animalCubes.map((cube) => {
-      if (scoreIndex < 0) return cube;
-      const newCube = {
-        ...cube,
-        type: "card" as const,
-        position: {
-          cardId: selectedCard.id,
-          index: scoreIndex,
-        },
-      };
-      scoreIndex--;
-      return newCube;
-    });
 
     const nextPrivateGameState: ImmutablePrivateGameState = {
-      ...privateGameState,
-      animalCards,
-      animalCubes,
+      ...context.gameState.privateGameState,
+      animalCards: result.value.animalCards,
+      animalCubes: result.value.animalCubes,
     };
 
     return this.pushHistory(
@@ -738,7 +687,7 @@ export class HarmoniesGame extends Harmonies {
       (c) => c?.id === animalCardId,
     );
 
-    if (!canPlaceCube(derivedAnimalCard, grid, hex, personalBoard)) {
+    if (!canPlaceCube({ animalCard: derivedAnimalCard, grid, hex, personalBoard })) {
       return { ok: false, message: "Animal pattern does not match the board" };
     }
 
@@ -753,91 +702,30 @@ export class HarmoniesGame extends Harmonies {
     const { animalCardId, hex } = context.action.payload;
     const { privateGameState } = context.gameState;
 
-    // Find the cube with the highest index on this card
-    const cubesOnCard = privateGameState.animalCubes
-      .filter(
-        (cube) => cube.type === "card" && cube.position.cardId === animalCardId,
-      )
-      .sort(
-        (a, b) =>
-          (b.type === "card" ? b.position.index : 0) -
-          (a.type === "card" ? a.position.index : 0),
-      );
+    const cubeToPlace = getHighestIndexCubeOnCard(
+      privateGameState.animalCubes,
+      animalCardId,
+    );
 
-    const cubeToPlace = cubesOnCard[0];
     if (!cubeToPlace) {
       return context.gameState;
     }
 
-    const placeCubeResult = placeCubeOnPersonalBoard({
+    const result = placeCube({
       privateGameState,
-      grid: context.gameState.grid,
+      animalCardId,
       cubeId: cubeToPlace.id,
       coords: coordsToString(hex),
     });
 
-    if (!placeCubeResult.ok) {
+    if (!result.ok) {
       return context.gameState;
     }
-
-    const { animalCubes } = placeCubeResult.value;
-
-    // Check if this was the last cube on the card
-    const remainingCubes = animalCubes.filter(
-      (cube) => cube.type === "card" && cube.position.cardId === animalCardId,
-    );
-
-    let animalCards = privateGameState.animalCards;
-
-    if (remainingCubes.length === 0) {
-      // All cubes placed - move card to completed and shift remaining cards
-      const completedCard = privateGameState.animalCards.find(
-        (card) =>
-          card.id === animalCardId &&
-          card.type === "held" &&
-          card.position.playerId === context.playerId,
-      );
-
-      if (completedCard && completedCard.type === "held") {
-        const completedIndex = completedCard.position.index;
-
-        animalCards = privateGameState.animalCards.map((card) => {
-          if (card.id === animalCardId) {
-            return {
-              ...card,
-              type: "completed" as const,
-              position: { playerId: context.playerId },
-            };
-          }
-          // Shift cards with higher index down by 1
-          if (
-            card.type === "held" &&
-            card.position.playerId === context.playerId &&
-            card.position.index > completedIndex
-          ) {
-            return {
-              ...card,
-              position: {
-                ...card.position,
-                index: card.position.index - 1,
-              },
-            };
-          }
-          return card;
-        });
-      }
-    }
-
-    const nextPrivateGameState: ImmutablePrivateGameState = {
-      ...privateGameState,
-      animalCubes,
-      animalCards,
-    };
 
     return this.pushHistory(
       context.gameState,
       context.action,
-      nextPrivateGameState,
+      result.value,
     );
   }
 
@@ -881,33 +769,7 @@ export class HarmoniesGame extends Harmonies {
 
     const refill = refillCentralBoard(privateGameState);
 
-    // Find empty slots in the animal card spread and replenish from deck
-    const emptySpreadIndexes: number[] = [];
-    for (let i = 0; i < 5; i++) {
-      const hasCard = privateGameState.animalCards.some(
-        (card) => card.type === "spread" && card.position.index === i,
-      );
-      if (!hasCard) {
-        emptySpreadIndexes.push(i);
-      }
-    }
-
-    let emptyIndexCursor = 0;
-    const animalCards = privateGameState.animalCards.map((card) => {
-      if (
-        card.type === "deck" &&
-        emptyIndexCursor < emptySpreadIndexes.length
-      ) {
-        const newCard: AnimalCardType = {
-          ...card,
-          type: "spread",
-          position: { index: emptySpreadIndexes[emptyIndexCursor] },
-        };
-        emptyIndexCursor++;
-        return newCard;
-      }
-      return card;
-    });
+    const animalCards = replenishAnimalCardSpread(privateGameState.animalCards);
 
     const nextPrivateGameState: ImmutablePrivateGameState = {
       ...refill.privateGameState,
