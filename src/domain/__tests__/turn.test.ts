@@ -2,10 +2,11 @@ import { describe, expect, test } from "bun:test";
 import type {
   ActionType,
   History,
+  GameState,
   ImmutablePrivateGameState,
   TokenType,
 } from "../../sharedTypes";
-import { createTurnState } from "../turn";
+import { applyTurnAction, createTurnState } from "../turn";
 
 function state(tokens: TokenType[] = []): ImmutablePrivateGameState {
   return {
@@ -116,3 +117,62 @@ describe("createTurnState", () => {
     expect(turn.canUndo).toBe(false);
   });
 });
+
+describe("applyTurnAction", () => {
+  test("records End Turn as not undoable", () => {
+    const privateGameState = state([
+      centralBoardToken("zone-1", 1),
+      centralBoardToken("zone-2", 2),
+      centralBoardToken("zone-3", 3),
+      centralBoardToken("zone-4", 4),
+      supplyToken("supply-1"),
+      supplyToken("supply-2"),
+      supplyToken("supply-3"),
+    ]);
+    const gameState: GameState = {
+      type: "active",
+      players: new Map(),
+      privateGameState,
+      history: [
+        historyEntry({
+          type: "takeTokens",
+          payload: 0,
+        }),
+      ],
+      grid: undefined as never,
+    };
+
+    const result = applyTurnAction({
+      action: { type: "endTurn" },
+      playerId: "player-1",
+      gameState,
+      randomHeight: () => 0,
+      shuffleTokens: (tokens) => tokens,
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok && result.gameState.type === "active") {
+      expect(result.gameState.history.at(-1)?.action).toMatchObject({
+        type: "endTurn",
+        canUndo: false,
+      });
+    }
+  });
+});
+
+function centralBoardToken(id: string, zone: number): TokenType {
+  return {
+    id,
+    color: "blue",
+    type: "centralBoard",
+    position: { zone, index: 0 },
+  };
+}
+
+function supplyToken(id: string): TokenType {
+  return {
+    id,
+    color: "blue",
+    type: "supply",
+  };
+}
