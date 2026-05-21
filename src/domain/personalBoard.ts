@@ -4,6 +4,7 @@ import type {
   HexState,
   ImmutablePrivateGameState,
   PrivateGameState,
+  PlayerGameState,
   TokenType,
 } from "../sharedTypes";
 import { tokenPlacable } from "../util/tokenPlaceable";
@@ -85,6 +86,45 @@ export function createPersonalBoardView({
       coords.map(([q, r]) => {
         const coords = coordsToString({ q, r });
         const tokens = stackByCoords.get(coords) ?? [];
+        return {
+          coords,
+          tokens,
+          topColor: tokens.at(-1)?.color ?? null,
+        };
+      }),
+  };
+}
+
+export function createPublicPersonalBoardView({
+  board,
+  grid,
+}: {
+  board: PlayerGameState["board"];
+  grid: Grid<Hex> | GridCoords;
+}): PersonalBoardView {
+  const coords = coordsFromGrid(grid);
+  const validCoords = new Set(coords.map(([q, r]) => coordsToString({ q, r })));
+
+  return {
+    hasHex: (coords) => validCoords.has(coords),
+    hexAt: (coords) => {
+      if (!validCoords.has(coords)) return null;
+      return board[coords] ?? { tokens: [], cube: null, cubeId: null };
+    },
+    stackAt: (coords) => board[coords]?.tokens ?? [],
+    cubeAt: (coords) => {
+      const hex = board[coords];
+      if (!hex?.cube || !hex.cubeId) return null;
+      return {
+        id: hex.cubeId,
+        type: hex.cube,
+      };
+    },
+    adjacentCoords: (coords) => adjacentCoords(grid, coords),
+    stacks: () =>
+      coords.map(([q, r]) => {
+        const coords = coordsToString({ q, r });
+        const tokens = board[coords]?.tokens ?? [];
         return {
           coords,
           tokens,

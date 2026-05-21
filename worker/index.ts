@@ -10,7 +10,6 @@ import {
   type AnimalCardType,
   type Broadcast,
   type CanPerformAction,
-  type DerivedPublicGameState,
   type GameState,
   type History,
   type ImmutablePrivateGameState,
@@ -35,7 +34,10 @@ import {
   zoneHasTokens,
 } from "../src/domain/centralBoard";
 import { createTurnState } from "../src/domain/turn";
-import { calculateFinalScore } from "../src/domain/finalScoring";
+import {
+  derivePublicActiveState,
+  derivePublicIdleState,
+} from "../src/domain/publicGameState";
 import { simulateEndBoardState } from "../src/util/simulateEndBoardState";
 
 export interface Env {
@@ -678,16 +680,7 @@ export class HarmoniesGame extends Harmonies {
       return { ok: false, message: "This hex already has a cube" };
     }
 
-    // Derive the public state to get the player's board (needed by canPlaceCube)
-    const publicState = this.derivePublicGameState();
-    const personalBoard = publicState.players[context.playerId].board;
-    const derivedAnimalCards =
-      publicState.players[context.playerId].playerCards;
-    const derivedAnimalCard = derivedAnimalCards.find(
-      (c) => c?.id === animalCardId,
-    );
-
-    if (!canPlaceCube({ animalCard: derivedAnimalCard, grid, hex, personalBoard })) {
+    if (!canPlaceCube({ animalCard, grid, hex, personalBoard: board })) {
       return { ok: false, message: "Animal pattern does not match the board" };
     }
 
@@ -908,160 +901,16 @@ export class HarmoniesGame extends Harmonies {
       type: "gameState",
       payload:
         this.gameState.type === "idle"
-          ? {
-              type: "idle",
-              players: Object.fromEntries(this.gameState.players),
-            }
-          : {
-              type: "active",
-              players: Object.fromEntries(this.gameState.players),
-              gameState: this.derivePublicGameState(),
-            },
+          ? derivePublicIdleState(this.gameState.players)
+          : derivePublicActiveState({
+              privateGameState: this.gameState.privateGameState,
+              players: this.gameState.players,
+              grid: this.gameState.grid,
+              gridCoords: grids[this.gameState.privateGameState.personalBoardSide],
+            }),
     };
 
     this.broadcast(state);
-  }
-
-  derivePublicGameState(): DerivedPublicGameState {
-    if (this.gameState.type === "idle") {
-      throw new Error("Game is not active");
-    }
-
-    const privateGameState = this.gameState.privateGameState;
-
-    const grid = grids[privateGameState.personalBoardSide];
-
-    const centralBoard: DerivedPublicGameState["centralBoard"] = [
-      [null, null, null],
-      [null, null, null],
-      [null, null, null],
-      [null, null, null],
-      [null, null, null],
-    ];
-
-    const players = privateGameState.playerIdList.reduce<
-      DerivedPublicGameState["players"]
-    >((players, playerId) => {
-      players[playerId] = {
-        id: playerId,
-        name: this.gameState.players.get(playerId)!.name,
-        takenTokens: [null, null, null],
-        playerCards: [null, null, null, null],
-        completedAnimalCards: [],
-        board: grid.reduce<DerivedPublicGameState["players"][string]["board"]>(
-          (board, [q, r]) => {
-            const key = `(${q},${r})`;
-            const cubeOnHex = privateGameState.animalCubes.find(
-              (cube) =>
-                cube.type === "personalBoard" && cube.position.coords === key,
-            );
-            board[key] = {
-              cube: cubeOnHex ? "animal" : null,
-              cubeId: cubeOnHex ? cubeOnHex.id : null,
-              tokens: [],
-            };
-            return board;
-          },
-          {},
-        ),
-      };
-      return players;
-    }, {});
-
-    // Iterate over the tokens and distribute them
-    privateGameState.tokens.forEach((token) => {
-      switch (token.type) {
-        case "supply":
-          break;
-        case "centralBoard":
-          centralBoard[token.position.zone][token.position.index] = token;
-          break;
-        case "taken":
-          players[token.position.player].takenTokens[token.position.slot] =
-            token;
-          break;
-        case "personalBoard":
-          players[token.position.player].board[
-            token.position.hex.coords
-          ].tokens[token.position.hex.stackPosition] = token;
-          break;
-        default:
-          token satisfies never;
-      }
-    });
-
-    const currentPlayerId = privateGameState.currentPlayerId;
-    if (!currentPlayerId) throw new Error("No current player");
-
-    const animalCardSpread: DerivedPublicGameState["animalCardSpread"] = [
-      null,
-      null,
-      null,
-      null,
-      null,
-    ];
-    privateGameState.animalCards.forEach((animalCard) => {
-      switch (animalCard.type) {
-        case "deck":
-          // TODO
-          break;
-        case "spread":
-          animalCardSpread[animalCard.position.index] = animalCard;
-          break;
-        case "held":
-          players[animalCard.position.playerId].playerCards[
-            animalCard.position.index
-          ] = {
-            ...animalCard,
-            scores: animalCard.scores.map((score, index) => ({
-              points: score,
-              cubeId:
-                privateGameState.animalCubes.find(
-                  (cube) =>
-                    cube.type === "card" &&
-                    cube.position.cardId === animalCard.id &&
-                    cube.position.index === index,
-                )?.id ?? null,
-            })),
-          };
-          break;
-        case "completed":
-          players[animalCard.position.playerId].completedAnimalCards.push(
-            animalCard,
-          );
-          break;
-        default:
-          animalCard satisfies never;
-      }
-    });
-
-    // Calculate scores for all players
-    for (const playerId of privateGameState.playerIdList) {
-      const player = players[playerId];
-      const completedCardPoints = player.completedAnimalCards.reduce(
-        (sum, card) => sum + (card.scores[0] ?? 0),
-        0,
-      );
-      const personalBoard = createPersonalBoardView({
-        privateGameState,
-        playerId,
-        grid: this.gameState.grid,
-      });
-      player.score = calculateFinalScore({
-        personalBoard,
-        side: privateGameState.personalBoardSide,
-        animalPoints: completedCardPoints,
-      });
-    }
-
-    return {
-      grid: grid,
-      currentPlayerId: privateGameState.currentPlayerId,
-      players: players,
-      centralBoard: centralBoard,
-      animalCardSpread: animalCardSpread,
-      TODO_REMOVE_privateGameState: this.gameState.privateGameState,
-    };
   }
 
   broadcast(broadcast: Broadcast) {

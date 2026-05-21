@@ -3,10 +3,9 @@ import type {
   AnimalCardType,
   AnimalCubeType,
   Coords,
-  DerivedAnimalCardType,
   ImmutablePrivateGameState,
-  PlayerGameState,
 } from "../sharedTypes";
+import type { PersonalBoardView } from "./personalBoard";
 
 type PlayerCardsResult<T> =
   | { ok: true; value: T }
@@ -33,10 +32,10 @@ type CompleteAnimalCardInput = {
 };
 
 type CanPlaceCubeInput = {
-  animalCard: DerivedAnimalCardType | undefined | null;
+  animalCard: { pattern: AnimalCardType["pattern"] } | undefined | null;
   grid: Grid<Hex>;
   hex: Coords;
-  personalBoard: PlayerGameState["board"];
+  personalBoard: PersonalBoardView;
 };
 
 export function takeAnimalCard({
@@ -219,7 +218,7 @@ export function canPlaceCube({
   personalBoard,
 }: CanPlaceCubeInput): boolean {
   if (!animalCard) return false;
-  if (personalBoard[`(${hex.q},${hex.r})`]?.cube) return false;
+  if (personalBoard.cubeAt(`(${hex.q},${hex.r})`)) return false;
 
   const positions = animalCard.pattern.map((tile) => tile.coordinates);
   const rotations = [0, 1, 2, 3, 4, 5].map((rotation) =>
@@ -237,7 +236,7 @@ export function canPlaceCube({
     if (trav.length !== animalCard.pattern.length) return false;
 
     return trav.reduce((isMatch, hex, index) => {
-      const place = personalBoard[`(${hex.q},${hex.r})`];
+      const place = personalBoard.hexAt(`(${hex.q},${hex.r})`);
       if (!place) return false;
       const placeTokens = place.tokens;
       const topPlaceToken = placeTokens.at(-1);

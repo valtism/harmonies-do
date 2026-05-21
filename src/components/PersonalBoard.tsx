@@ -7,6 +7,7 @@ import { AnimalCard } from "../components/AnimalCard";
 import { PlacingToken } from "../components/PlacingToken";
 import { Token } from "../components/Token";
 import { Cube } from "../components/Cube";
+import { createPublicPersonalBoardView } from "../domain/personalBoard";
 import type {
   ActionType,
   DerivedPublicGameState,
@@ -80,6 +81,10 @@ export function PersonalBoard({
   });
 
   const grid = new Grid(Hex, gameState.grid);
+  const personalBoard = createPublicPersonalBoardView({
+    board: player.board,
+    grid,
+  });
 
   return (
     <div>
@@ -157,7 +162,7 @@ export function PersonalBoard({
               ),
               grid,
               hex,
-              personalBoard: player.board,
+              personalBoard,
             });
 
             return (

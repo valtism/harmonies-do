@@ -6,6 +6,7 @@ import type {
   DerivedAnimalCardType,
   ImmutablePrivateGameState,
 } from "../../sharedTypes";
+import { createPublicPersonalBoardView } from "../personalBoard";
 import {
   canPlaceCube,
   getCompletedCards,
@@ -313,7 +314,10 @@ describe("playerCards", () => {
         animalCard: null,
         grid: undefined as unknown as Grid<Hex>,
         hex: { q: 0, r: 0 },
-        personalBoard: {},
+        personalBoard: createPublicPersonalBoardView({
+          board: {},
+          grid: [],
+        }),
       });
 
       expect(result).toBe(false);
@@ -337,9 +341,12 @@ describe("playerCards", () => {
         animalCard,
         grid: undefined as unknown as Grid<Hex>,
         hex: { q: 0, r: 0 },
-        personalBoard: {
-          "(0,0)": { cube: "animal", cubeId: "cube-1", tokens: [] },
-        },
+        personalBoard: createPublicPersonalBoardView({
+          board: {
+            "(0,0)": { cube: "animal", cubeId: "cube-1", tokens: [] },
+          },
+          grid: [[0, 0]],
+        }),
       });
 
       expect(result).toBe(false);
