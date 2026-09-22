@@ -16,26 +16,28 @@ export function Game({ gameState, sendAction, playerId }: GameProps) {
       {gameState.currentPlayerId === playerId && (
         <div className="fixed top-2 right-4">Your turn!</div>
       )}
-      <button
-        className="rounded bg-stone-100 px-2 py-1 text-stone-900 hover:bg-stone-300"
-        onClick={() => {
-          sendAction({
-            type: "undo",
-          });
-        }}
-      >
-        Undo
-      </button>
-      <button
-        className="rounded bg-stone-100 px-2 py-1 text-stone-900 hover:bg-stone-300"
-        onClick={() => {
-          sendAction({
-            type: "endTurn",
-          });
-        }}
-      >
-        End turn
-      </button>
+      <div className="fixed right-4 bottom-4 z-10 flex gap-2">
+        <button
+          className="rounded bg-stone-100 px-2 py-1 text-stone-900 hover:bg-stone-300"
+          onClick={() => {
+            sendAction({
+              type: "undo",
+            });
+          }}
+        >
+          Undo
+        </button>
+        <button
+          className="rounded bg-stone-100 px-2 py-1 text-stone-900 hover:bg-stone-300"
+          onClick={() => {
+            sendAction({
+              type: "endTurn",
+            });
+          }}
+        >
+          End turn
+        </button>
+      </div>
       <button
         className="rounded bg-amber-600 px-2 py-1 text-white hover:bg-amber-700"
         onClick={() => {
