@@ -7,7 +7,7 @@ import { globalIgnores } from "eslint/config";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(["dist"]),
+  globalIgnores([".delta", "dist"]),
   {
     files: ["**/*.{ts,tsx}"],
     ignores: ["worker-configuration.d.ts"],
@@ -20,9 +20,19 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parserOptions: {
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
     rules: {
       "@typescript-eslint/no-unused-vars": "off",
+      "react-refresh/only-export-components": [
+        "error",
+        {
+          allowConstantExport: true,
+          extraHOCs: ["createFileRoute", "createRootRoute"],
+        },
+      ],
     },
   },
 ]);
