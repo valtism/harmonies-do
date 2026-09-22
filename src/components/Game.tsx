@@ -12,7 +12,7 @@ export function Game({ gameState, sendAction, playerId }: GameProps) {
   console.log(gameState);
 
   return (
-    <div className="mb-60 flex flex-col items-start">
+    <div className="game-layout mb-60 flex w-full flex-col items-start">
       {gameState.currentPlayerId === playerId && (
         <div className="fixed top-2 right-4">Your turn!</div>
       )}
@@ -76,7 +76,7 @@ export function Game({ gameState, sendAction, playerId }: GameProps) {
       />
 
       {Object.values(gameState.players).map((player) => (
-        <div key={player.id} style={{ width: 400 }}>
+        <div key={player.id} className="personal-board-container">
           <PersonalBoard
             playerId={player.id}
             gameState={gameState}

@@ -117,11 +117,11 @@ export function PersonalBoard({
           <div>{selectedAnimalCardId}</div>
         </div>
       )}
-      <div className="my-2 flex gap-2">
+      <div className="player-card-slots my-2 grid">
         {player.playerCards.map((card, index) => (
           <div
             key={card?.id || index}
-            className="flex-1"
+            className="w-full"
             style={{ aspectRatio: "140/240" }}
           >
             {card ? (
@@ -134,6 +134,7 @@ export function PersonalBoard({
                   }
                 }}
                 className={clsx(
+                  "block size-full",
                   selectedAnimalCardId === card.id &&
                     "rounded ring-3 ring-green-500",
                 )}

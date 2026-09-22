@@ -10,11 +10,11 @@ export function AnimalCard({ card, ...props }: AnimalCardProps) {
   if (!card) return null;
   return (
     <ViewTransition name={card.id}>
-      <div className="relative w-40">
+      <div className="relative w-full" style={{ aspectRatio: "140/240" }}>
         <img
           src={animalCardImages[card.id]}
           alt={card.id}
-          className="size-full"
+          className="block size-full"
           {...props}
         />
         {card.scores.map((score, index) => {

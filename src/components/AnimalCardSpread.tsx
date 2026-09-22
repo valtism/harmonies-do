@@ -8,23 +8,25 @@ interface AnimalCardSpreadProps {
 
 export function AnimalCardSpread({ spread, onClick }: AnimalCardSpreadProps) {
   return (
-    <div className="flex w-80 gap-2">
-      {spread.map((card, index) => {
-        if (!card) return null;
-        return (
-          <button key={index} onClick={() => onClick(index)} className="flex-1">
-            <AnimalCard
-              card={{
-                ...card,
-                scores: card.scores.map((score) => ({
-                  points: score,
-                  cubeId: null,
-                })),
-              }}
-            />
-          </button>
-        );
-      })}
+    <div className="w-full overflow-x-auto">
+      <div className="animal-card-spread grid">
+        {spread.map((card, index) => {
+          if (!card) return null;
+          return (
+            <button key={index} onClick={() => onClick(index)}>
+              <AnimalCard
+                card={{
+                  ...card,
+                  scores: card.scores.map((score) => ({
+                    points: score,
+                    cubeId: null,
+                  })),
+                }}
+              />
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
